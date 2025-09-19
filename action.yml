@@ -1,0 +1,15 @@
+name: "OpenAPI Analyzer"
+description: "Analyze OpenAPI specs and provide best practice suggestions"
+author: "Your Name"
+inputs:
+  openapi-url:
+    description: "The URL of the OpenAPI specification (JSON or YAML)"
+    required: true
+outputs:
+  report:
+    description: "The analyzer's JSON report"
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  args:
+    - ${{ inputs.openapi-url }}
