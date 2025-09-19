@@ -1,4 +1,5 @@
 import json
+import os
 import sys
 import requests
 import yaml
@@ -201,10 +202,17 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
 # --- CLI Entrypoint ---
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
+    # Check for GitHub Actions environment variable first
+    url = os.getenv("INPUT_SPEC_URL")
+    
+    # Fall back to command line argument if not in GitHub Actions
+    if not url and len(sys.argv) >= 2:
+        url = sys.argv[1]
+    
+    if not url:
         print("Usage: python analyzer.py <openapi-url>")
+        print("Or set INPUT_SPEC_URL environment variable for GitHub Actions")
         sys.exit(1)
 
-    url = sys.argv[1]
     result = analyze_openapi_url(url)
     print(json.dumps(result, indent=2))
