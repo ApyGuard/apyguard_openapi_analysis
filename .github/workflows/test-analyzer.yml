@@ -1,0 +1,11 @@
+name: Test OpenAPI Analyzer
+on: [push]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run analyzer from local repo
+        uses: ./   # <-- important: runs your local Action, not marketplace version
+        with:
+          openapi-url: "https://petstore3.swagger.io/api/v3/openapi.json"
