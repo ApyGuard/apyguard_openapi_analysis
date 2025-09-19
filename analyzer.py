@@ -46,7 +46,6 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
     errors: List[str] = []
     suggestions: List[str] = []
 
-    # fetch spec
     try:
         resp = requests.get(url, timeout=30, allow_redirects=True)
         resp.raise_for_status()
@@ -56,9 +55,7 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
         return {"status": "error", "errors": [f"Failed to fetch URL: {e}"], "is_valid": False}
 
     if not spec:
-        return {"status": "error", "errors": suggestions, "is_valid": False}
-
-    # validate with spec validator
+        return {"status": "error", "errors": errors, "is_valid": False}
     suggestions.extend(_validate_with_openapi_spec_validator(spec))
 
     # --- Your original detailed rules ---
