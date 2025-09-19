@@ -203,6 +203,7 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
 
 if __name__ == "__main__":
     # Check for GitHub Actions environment variable first
+    # GitHub Actions converts hyphens to underscores in env var names
     url = os.getenv("INPUT_SPEC_URL")
     
     # Fall back to command line argument if not in GitHub Actions
@@ -212,6 +213,7 @@ if __name__ == "__main__":
     if not url:
         print("Usage: python analyzer.py <openapi-url>")
         print("Or set INPUT_SPEC_URL environment variable for GitHub Actions")
+        print(f"Debug: Available env vars with INPUT_: {[k for k in os.environ.keys() if k.startswith('INPUT_')]}")
         sys.exit(1)
 
     result = analyze_openapi_url(url)
