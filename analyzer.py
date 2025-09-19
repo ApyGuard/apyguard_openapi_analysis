@@ -56,9 +56,9 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
 
     if not spec:
         return {"status": "error", "errors": errors, "is_valid": False}
+
     suggestions.extend(_validate_with_openapi_spec_validator(spec))
 
-    # --- Your original detailed rules ---
     info = spec.get("info", {})
     if not info.get("title"):
         suggestions.append("Spec is missing an API title.")
@@ -72,7 +72,6 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
     components = spec.get("components", {})
     schemas = components.get("schemas", {}) if isinstance(components, dict) else {}
 
-    # servers
     servers = spec.get("servers", [])
     if not servers:
         suggestions.append("No servers defined. Consider specifying servers for clarity.")
@@ -83,12 +82,10 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
                 if url_val and "{" in url_val:
                     suggestions.append(f"Server URL '{url_val}' uses variables. Document them properly.")
 
-    # global security
     security = spec.get("security", [])
     if not security:
         suggestions.append("No global security requirements defined. Consider adding authentication info.")
 
-    # operations
     operations_count = 0
     seen_operation_ids = set()
     for path, methods in paths.items():
@@ -103,7 +100,6 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
                 continue
             operations_count += 1
 
-            # operationId
             opid = details.get("operationId")
             if not opid:
                 suggestions.append(f"Operation {method.upper()} {path} missing operationId.")
@@ -112,7 +108,6 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
                     suggestions.append(f"Duplicate operationId '{opid}' found.")
                 seen_operation_ids.add(opid)
 
-            # parameters
             params = details.get("parameters", [])
             if isinstance(params, list):
                 seen = set()
@@ -136,7 +131,6 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
                             f"Parameter {name} in {loc} of {method.upper()} {path} missing description."
                         )
 
-            # requestBody
             if "requestBody" in details:
                 rb = details.get("requestBody", {})
                 if isinstance(rb, dict):
@@ -144,7 +138,6 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
                     if not content:
                         suggestions.append(f"{method.upper()} {path} requestBody has no content defined.")
 
-            # responses
             responses = details.get("responses", {})
             if not responses:
                 suggestions.append(f"Operation {method.upper()} {path} has no responses defined.")
@@ -169,11 +162,9 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
                                     f"Response {code} of {method.upper()} {path} with content {ctype} missing schema."
                                 )
 
-            # security per-operation
             if "security" not in details:
                 suggestions.append(f"Operation {method.upper()} {path} missing security definition.")
 
-    # schemas
     for sname, sdef in schemas.items():
         if not isinstance(sdef, dict):
             continue
@@ -182,7 +173,6 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
         if "description" not in sdef:
             suggestions.append(f"Schema {sname} missing description.")
 
-    # --- Final summary ---
     return {
         "status": "success",
         "is_valid": True,
@@ -199,11 +189,8 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
 # --- CLI Entrypoint ---
 
 if __name__ == "__main__":
-    # Check for GitHub Actions environment variable first
-    # GitHub Actions converts hyphens to underscores in env var names
     url = os.getenv("INPUT_SPEC_URL")
     
-    # Fall back to command line argument if not in GitHub Actions
     if not url and len(sys.argv) >= 2:
         url = sys.argv[1]
     
@@ -213,4 +200,18 @@ if __name__ == "__main__":
         sys.exit(1)
 
     result = analyze_openapi_url(url)
+    
+    if os.getenv("GITHUB_ACTIONS"):
+        def set_output(name: str, value: str):
+            print(f"::set-output name={name}::{value}")
+        
+        set_output("analysis", json.dumps(result))
+        set_output("is_valid", str(result.get("is_valid", False)).lower())
+        set_output("suggestions_count", str(len(result.get("suggestions", []))))
+        
+        summary = result.get("summary", {})
+        set_output("operations_count", str(summary.get("operations_count", 0)))
+        set_output("paths_count", str(summary.get("paths_count", 0)))
+        set_output("schemas_count", str(summary.get("schemas_count", 0)))
+    
     print(json.dumps(result, indent=2))
