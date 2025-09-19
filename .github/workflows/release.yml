@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., v1.0.0)'
+        description: 'v1.0.0'
         required: true
         type: string
 
@@ -54,7 +54,7 @@ jobs:
         push: true
         tags: |
           ghcr.io/${{ github.repository }}:latest
-          ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+          ghcr.io/${{ github.repository }}:v${{ steps.version.outputs.version }}
           ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version_without_v }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -64,13 +64,13 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.version.outputs.version }}
-        release_name: OpenAPI Analyzer ${{ steps.version.outputs.version }}
+        tag_name: v${{ steps.version.outputs.version }}
+        release_name: OpenAPI Analyzer v${{ steps.version.outputs.version }}
         body: |
-          ## 🚀 OpenAPI Analyzer ${{ steps.version.outputs.version }}
+          ## 🚀 OpenAPI Analyzer v${{ steps.version.outputs.version }}
           
           ### What's New
-          - Enhanced OpenAPI specification analysis
+          - Enhanced OpenAPI specification analysis ${{ steps.version.outputs.version }}
           - Improved security checks
           - Better documentation quality assessment
           - Comprehensive best practice validation
@@ -78,14 +78,14 @@ jobs:
           ### Usage
           ```yaml
           - name: Analyze OpenAPI Specification
-            uses: ApyGuard/openapi_analyzer@${{ steps.version.outputs.version }}
+            uses: ApyGuard/openapi_analyzer@v${{ steps.version.outputs.version }}
             with:
               spec_url: 'https://api.example.com/openapi.json'
           ```
           
           ### Docker Image
           ```bash
-          docker pull ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+          docker pull ghcr.io/${{ github.repository }}:v${{ steps.version.outputs.version }}
           ```
           
           ### Full Changelog
