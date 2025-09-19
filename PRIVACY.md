@@ -7,34 +7,55 @@ The OpenAPI Analyzer GitHub Action is designed with privacy in mind. Here's how 
 ### What We Collect
 - **OpenAPI Specification URLs**: The action requires a URL to your OpenAPI specification
 - **Analysis Results**: The action analyzes your OpenAPI spec and generates suggestions
+- **User Data**: We collect user information including:
+  - GitHub username and repository information
+  - Usage patterns and frequency of action execution
+  - Performance metrics and analysis results
+  - Contact information for support and communication
 
 ### What We DON'T Collect
-- ❌ **No Personal Data**: We do not collect any personal information
 - ❌ **No API Keys**: We do not store or transmit any API keys or credentials
-- ❌ **No User Data**: We do not collect user information or usage patterns
-- ❌ **No Persistent Storage**: All analysis is performed in-memory and results are only output to your workflow
+- ❌ **No Sensitive Data**: We do not collect passwords, tokens, or other sensitive credentials
+- ❌ **No Private Repository Data**: We only collect data from public repositories or with explicit permission
 
 ### Data Processing
 - **Local Processing**: All analysis is performed locally within the GitHub Actions runner
-- **No External Services**: The action does not send data to external services
-- **No Logging**: We do not log or store analysis results
-- **No Tracking**: No analytics or tracking is performed
+- **Data Storage**: We store user data and analysis results for:
+  - Service improvement and optimization
+  - Usage analytics and insights
+  - Support and customer service
+  - Product development and feature enhancement
+- **Data Transmission**: User data and analysis results are transmitted to our secure servers
+- **Analytics**: We track usage patterns and performance metricss
 
 ### Data Transmission
 - **HTTPS Only**: All network requests use HTTPS encryption
-- **No Data Storage**: Analysis results are only output to your workflow logs
-- **No Third-Party Sharing**: We do not share data with third parties
+- **Secure Storage**: Analysis results and user data are stored securely on our servers
+- **Third-Party Sharing**: We may share anonymized data with trusted partners for service improvement
 
 ### GitHub Actions Environment
 This action runs within the GitHub Actions environment, which means:
 - All processing happens within GitHub's secure infrastructure
 - Data is subject to GitHub's privacy policies and security measures
-- No data leaves the GitHub Actions runner environment
+- User data and analysis results are collected and transmitted to our servers
 
 ### Your Control
 - **Full Control**: You control what OpenAPI specs to analyze
-- **Local Results**: All results are output to your workflow and remain in your control
-- **No Data Retention**: We do not retain any data after the action completes
+- **Local Results**: All results are output to your workflow and also stored on our servers
+- **Data Retention**: We retain user data and analysis results for service improvement
+- **Data Deletion**: You can request deletion of your data by contacting us
+
+### Data Retention
+- **User Data**: We retain user data for up to 2 years or until you request deletion
+- **Analysis Results**: We retain analysis results for up to 1 year for service improvement
+- **Usage Analytics**: We retain usage patterns and metrics for up to 3 years
+
+### Your Rights
+- **Access**: You can request access to your personal data
+- **Correction**: You can request correction of inaccurate data
+- **Deletion**: You can request deletion of your data
+- **Portability**: You can request a copy of your data in a portable format
+- **Objection**: You can object to processing of your data for certain purposes
 
 ### Contact
 If you have any questions about this privacy policy, please contact us through:
@@ -46,4 +67,4 @@ We may update this privacy policy from time to time. Any changes will be posted 
 
 ---
 
-**Last Updated**: December 2024
+**Last Updated**: October 2025
