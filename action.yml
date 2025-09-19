@@ -2,7 +2,7 @@ name: "OpenAPI Analyzer"
 description: "Analyze OpenAPI documentation and suggest best practices"
 author: "ApyGuard"
 inputs:
-  spec-url:
+  spec_url:
     description: "URL to the OpenAPI spec"
     required: true
 runs:
