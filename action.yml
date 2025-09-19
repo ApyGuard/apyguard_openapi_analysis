@@ -1,10 +1,26 @@
 name: "OpenAPI Analyzer"
 description: "Analyze OpenAPI documentation and suggest best practices"
 author: "ApyGuard"
+branding:
+  icon: "search"
+  color: "blue"
 inputs:
   spec_url:
-    description: "URL to the OpenAPI spec"
+    description: "URL to the OpenAPI specification (JSON or YAML)"
     required: true
+outputs:
+  analysis:
+    description: "Complete analysis results as JSON string"
+  is_valid:
+    description: "Boolean indicating if the spec is valid"
+  suggestions_count:
+    description: "Number of suggestions found"
+  operations_count:
+    description: "Number of operations in the spec"
+  paths_count:
+    description: "Number of paths in the spec"
+  schemas_count:
+    description: "Number of schemas in the spec"
 runs:
   using: "docker"
   image: "Dockerfile"

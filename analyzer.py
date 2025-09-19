@@ -216,4 +216,21 @@ if __name__ == "__main__":
         sys.exit(1)
 
     result = analyze_openapi_url(url)
+    
+    # Set GitHub Actions outputs if running in GitHub Actions
+    if os.getenv("GITHUB_ACTIONS"):
+        # Set outputs using GitHub Actions format
+        def set_output(name: str, value: str):
+            print(f"::set-output name={name}::{value}")
+        
+        set_output("analysis", json.dumps(result))
+        set_output("is_valid", str(result.get("is_valid", False)).lower())
+        set_output("suggestions_count", str(len(result.get("suggestions", []))))
+        
+        summary = result.get("summary", {})
+        set_output("operations_count", str(summary.get("operations_count", 0)))
+        set_output("paths_count", str(summary.get("paths_count", 0)))
+        set_output("schemas_count", str(summary.get("schemas_count", 0)))
+    
+    # Always print the result for debugging/logging
     print(json.dumps(result, indent=2))
