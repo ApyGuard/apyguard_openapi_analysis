@@ -5,7 +5,9 @@ jobs:
   analyze:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: Run analyzer from local repo
         uses: ./   # <-- important: runs your local Action, not marketplace version
         with:
-          openapi-url: "https://petstore3.swagger.io/api/v3/openapi.json"
+          spec-url: "https://petstore3.swagger.io/api/v3/openapi.json"
