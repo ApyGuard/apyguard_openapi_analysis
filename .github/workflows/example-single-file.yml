@@ -1,0 +1,66 @@
+name: Analyze Single OpenAPI File
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      spec_url:
+        description: 'OpenAPI specification URL'
+        required: true
+        default: 'https://petstore.swagger.io/v2/swagger.json'
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Analyze OpenAPI Specification
+      id: analyze
+      uses: ApyGuard/openapi_analyzer@v1
+      with:
+        spec_url: ${{ github.event.inputs.spec_url || 'https://petstore.swagger.io/v2/swagger.json' }}
+        
+    - name: Display Results
+      run: |
+        echo "Analysis Results:"
+        echo "=================="
+        echo "Valid: ${{ steps.analyze.outputs.is_valid }}"
+        echo "Suggestions: ${{ steps.analyze.outputs.suggestions_count }}"
+        echo "Operations: ${{ steps.analyze.outputs.operations_count }}"
+        echo "Paths: ${{ steps.analyze.outputs.paths_count }}"
+        echo "Schemas: ${{ steps.analyze.outputs.schemas_count }}"
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const analysis = JSON.parse('${{ steps.analyze.outputs.analysis }}');
+          const suggestions = analysis.suggestions || [];
+          
+          if (suggestions.length > 0) {
+            const comment = `## 🔍 OpenAPI Analysis Results\n\n` +
+              `**Status**: ${analysis.status}\n` +
+              `**Valid**: ${analysis.is_valid ? '✅' : '❌'}\n\n` +
+              `### 📋 Suggestions (${suggestions.length}):\n\n` +
+              suggestions.map(s => `- ${s}`).join('\n');
+              
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+          } else {
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '## ✅ OpenAPI Analysis Results\n\nNo suggestions found! Your OpenAPI specification looks great! 🎉'
+            });
+          }

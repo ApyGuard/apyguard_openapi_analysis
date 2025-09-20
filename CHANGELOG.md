@@ -8,15 +8,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Comprehensive README with usage examples
-- Privacy policy for marketplace compliance
-- Security policy for vulnerability reporting
-- Automated release workflow
-- MIT license
+- 🆕 **Repository Analysis**: Analyze entire repositories for OpenAPI files
+- 🆕 **Auto-Discovery**: Automatically finds OpenAPI files in repositories using common patterns
+- 🆕 **Repository Metadata**: Get repository information, stars, forks, and language
+- 🆕 **Multiple File Support**: Analyze multiple OpenAPI files in a single run
+- 🆕 **Enhanced CLI**: Support for repository analysis via command line interface
+- 🆕 **GitHub Token Support**: Support for private repositories and higher rate limits
+- 🆕 **Output Formats**: JSON and summary output formats for different use cases
+- 🆕 **Rate Limit Management**: Built-in GitHub API rate limit handling and status
+- 🆕 **Comprehensive Testing**: Offline and online testing suites
+- 🆕 **Example Workflows**: Multiple workflow examples for different scenarios
+- 🆕 **Enhanced Documentation**: Repository analysis documentation and examples
 
 ### Changed
-- Enhanced action.yml with proper outputs and branding
-- Updated analyzer.py to set GitHub Actions outputs
+- Enhanced action.yml with repository analysis inputs and outputs
+- Updated analyzer.py with repository analysis functionality
+- Improved README with repository analysis features and examples
+- Updated CLI interface to support both single files and repositories
+- Enhanced GitHub Actions outputs with repository metadata
+
+### Technical Details
+- Added GitHub API integration for repository information
+- Implemented OpenAPI file discovery using GitHub search API
+- Added support for multiple OpenAPI file formats (JSON/YAML)
+- Enhanced error handling for repository analysis
+- Added rate limit management and status checking
+- Improved CLI interface with argument parsing
+- Added comprehensive testing and example files
 
 ## [1.0.0] - 2025-10-XX
 

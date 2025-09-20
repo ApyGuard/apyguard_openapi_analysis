@@ -1,0 +1,98 @@
+name: Analyze Repository OpenAPI Files
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository to analyze (owner/repo)'
+        required: true
+        default: 'github/rest-api-description'
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Analyze Repository OpenAPI Files
+      id: analyze
+      uses: ApyGuard/openapi_analyzer@v1
+      with:
+        repository: ${{ github.event.inputs.repository || github.repository }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        output_format: 'summary'
+        
+    - name: Display Results
+      run: |
+        echo "Repository Analysis Results:"
+        echo "============================"
+        echo "Repository: ${{ steps.analyze.outputs.repository_full_name }}"
+        echo "URL: ${{ steps.analyze.outputs.repository_url }}"
+        echo "Stars: ${{ steps.analyze.outputs.repository_stars }}"
+        echo "Forks: ${{ steps.analyze.outputs.repository_forks }}"
+        echo "Valid: ${{ steps.analyze.outputs.is_valid }}"
+        echo "Suggestions: ${{ steps.analyze.outputs.suggestions_count }}"
+        echo "Operations: ${{ steps.analyze.outputs.operations_count }}"
+        echo "Paths: ${{ steps.analyze.outputs.paths_count }}"
+        echo "Schemas: ${{ steps.analyze.outputs.schemas_count }}"
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const analysis = JSON.parse('${{ steps.analyze.outputs.analysis }}');
+          const repository = analysis.repository;
+          const openapiFiles = analysis.openapi_files || [];
+          
+          let comment = `## 🔍 Repository OpenAPI Analysis Results\n\n`;
+          comment += `**Repository**: [${repository.full_name}](${repository.url})\n`;
+          comment += `**Description**: ${repository.description || 'No description'}\n`;
+          comment += `**Stars**: ${repository.stars} | **Forks**: ${repository.forks}\n\n`;
+          
+          if (openapiFiles.length === 0) {
+            comment += `### 📄 No OpenAPI files found in this repository.\n\n`;
+            comment += `The analyzer searched for common OpenAPI file patterns:\n`;
+            comment += `- \`openapi.json\`, \`openapi.yaml\`, \`openapi.yml\`\n`;
+            comment += `- \`swagger.json\`, \`swagger.yaml\`, \`swagger.yml\`\n`;
+            comment += `- \`api.json\`, \`api.yaml\`, \`api.yml\`\n`;
+            comment += `- \`spec.json\`, \`spec.yaml\`, \`spec.yml\`\n`;
+          } else {
+            comment += `### 📄 Found ${openapiFiles.length} OpenAPI file(s):\n\n`;
+            
+            openapiFiles.forEach((file, index) => {
+              const fileInfo = file.file_info;
+              const summary = file.summary || {};
+              const suggestions = file.suggestions || [];
+              
+              comment += `#### ${index + 1}. \`${fileInfo.path}\`\n`;
+              comment += `- **Size**: ${fileInfo.size} bytes\n`;
+              comment += `- **Operations**: ${summary.operations_count || 0}\n`;
+              comment += `- **Paths**: ${summary.paths_count || 0}\n`;
+              comment += `- **Schemas**: ${summary.schemas_count || 0}\n`;
+              comment += `- **Suggestions**: ${suggestions.length}\n\n`;
+              
+              if (suggestions.length > 0) {
+                comment += `**Top suggestions for this file:**\n`;
+                suggestions.slice(0, 3).forEach(suggestion => {
+                  comment += `- ${suggestion}\n`;
+                });
+                if (suggestions.length > 3) {
+                  comment += `- ... and ${suggestions.length - 3} more suggestions\n`;
+                }
+                comment += `\n`;
+              }
+            });
+          }
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });

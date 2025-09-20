@@ -1,5 +1,5 @@
 name: "OpenAPI Analyzer"
-description: "Analyze OpenAPI documentation and suggest best practices"
+description: "Analyze OpenAPI documentation and suggest best practices. Supports both single files and entire repositories."
 author: "ApyGuard"
 branding:
   icon: "search"
@@ -7,7 +7,17 @@ branding:
 inputs:
   spec_url:
     description: "URL to the OpenAPI specification (JSON or YAML)"
-    required: true
+    required: false
+  repository:
+    description: "GitHub repository to analyze (format: owner/repo)"
+    required: false
+  github_token:
+    description: "GitHub token for private repositories or higher rate limits"
+    required: false
+  output_format:
+    description: "Output format (json or summary)"
+    required: false
+    default: "json"
 outputs:
   analysis:
     description: "Complete analysis results as JSON string"
@@ -21,6 +31,24 @@ outputs:
     description: "Number of paths in the spec"
   schemas_count:
     description: "Number of schemas in the spec"
+  repository_name:
+    description: "Repository name (when analyzing repositories)"
+  repository_full_name:
+    description: "Full repository name (owner/repo)"
+  repository_url:
+    description: "Repository URL"
+  repository_stars:
+    description: "Number of repository stars"
+  repository_forks:
+    description: "Number of repository forks"
+  user_actor:
+    description: "GitHub username who triggered the action"
+  user_repository:
+    description: "Repository where the action was triggered"
+  user_workflow:
+    description: "Workflow name that triggered the action"
+  user_run_id:
+    description: "Unique run ID for this action execution"
 runs:
   using: "docker"
   image: "Dockerfile"

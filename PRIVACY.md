@@ -2,69 +2,91 @@
 
 ## Data Collection and Usage
 
-The OpenAPI Analyzer GitHub Action is designed with privacy in mind. Here's how we handle data:
-
-### What We Collect
-- **OpenAPI Specification URLs**: The action requires a URL to your OpenAPI specification
-- **Analysis Results**: The action analyzes your OpenAPI spec and generates suggestions
-- **User Data**: We collect user information including:
-  - GitHub username and repository information
-  - Usage patterns and frequency of action execution
-  - Performance metrics and analysis results
-  - Contact information for support and communication
-
-### What We DON'T Collect
-- ❌ **No API Keys**: We do not store or transmit any API keys or credentials
-- ❌ **No Sensitive Data**: We do not collect passwords, tokens, or other sensitive credentials
-- ❌ **No Private Repository Data**: We only collect data from public repositories or with explicit permission
-
-### Data Processing
-- **Local Processing**: All analysis is performed locally within the GitHub Actions runner
-- **Data Storage**: We store user data and analysis results for:
-  - Service improvement and optimization
-  - Usage analytics and insights
-  - Support and customer service
-  - Product development and feature enhancement
-- **Data Transmission**: User data and analysis results are transmitted to our secure servers
-- **Analytics**: We track usage patterns and performance metricss
-
-### Data Transmission
-- **HTTPS Only**: All network requests use HTTPS encryption
-- **Secure Storage**: Analysis results and user data are stored securely on our servers
-- **Third-Party Sharing**: We may share anonymized data with trusted partners for service improvement
-
-### GitHub Actions Environment
-This action runs within the GitHub Actions environment, which means:
-- All processing happens within GitHub's secure infrastructure
-- Data is subject to GitHub's privacy policies and security measures
-- User data and analysis results are collected and transmitted to our servers
-
-### Your Control
-- **Full Control**: You control what OpenAPI specs to analyze
-- **Local Results**: All results are output to your workflow and also stored on our servers
-- **Data Retention**: We retain user data and analysis results for service improvement
-- **Data Deletion**: You can request deletion of your data by contacting us
-
-### Data Retention
-- **User Data**: We retain user data for up to 2 years or until you request deletion
-- **Analysis Results**: We retain analysis results for up to 1 year for service improvement
-- **Usage Analytics**: We retain usage patterns and metrics for up to 3 years
-
-### Your Rights
-- **Access**: You can request access to your personal data
-- **Correction**: You can request correction of inaccurate data
-- **Deletion**: You can request deletion of your data
-- **Portability**: You can request a copy of your data in a portable format
-- **Objection**: You can object to processing of your data for certain purposes
-
-### Contact
-If you have any questions about this privacy policy, please contact us through:
-- GitHub Issues: [Create an issue](https://github.com/ApyGuard/openapi_analyzer/issues)
-- GitHub Discussions: [Start a discussion](https://github.com/ApyGuard/openapi_analyzer/discussions)
-
-### Changes to This Policy
-We may update this privacy policy from time to time. Any changes will be posted on this page with an updated revision date.
+The OpenAPI Analyzer GitHub Action is designed with privacy and transparency in mind. This document explains what data we collect, why we collect it, how we use it, and your rights.
 
 ---
 
-**Last Updated**: October 2025
+### What We Collect
+- **OpenAPI Specification URLs**: Required to run the analysis.  
+- **Analysis Results**: Suggestions, validations, and quality checks generated from your OpenAPI spec.  
+- **User Metadata**:
+  - GitHub username and repository information  
+  - Action execution frequency and usage patterns  
+  - Performance metrics from analysis runs  
+  - Contact details (if provided for support purposes)  
+
+---
+
+### Why We Collect Data
+We only collect data that is necessary to provide, improve, and support the service:  
+
+- **OpenAPI Specification URLs** – so the action can fetch and analyze your API specification.  
+- **Analysis Results** – to deliver actionable feedback, generate reports, and improve validation accuracy.  
+- **GitHub Metadata (username, repo info)** – to identify usage context, improve integration, and enable support.  
+- **Usage Patterns and Performance Metrics** – to optimize performance, scale the service, and detect failures.  
+- **Contact Information** – so we can respond to your requests and provide customer support.  
+
+We do **not** use collected data for advertising or unrelated purposes.  
+
+---
+
+### What We *Do Not* Collect
+- ❌ **API Keys or Secrets** – no access to authentication credentials.  
+- ❌ **Passwords or Tokens** – we never collect sensitive credentials.  
+- ❌ **Private Repository Content** – unless explicitly provided by you.  
+
+---
+
+### How We Process Data
+- **Local Analysis**: Specs are analyzed in the GitHub Actions runner.  
+- **Data Transmission**: Analysis results and metadata are securely transmitted to our servers.  
+- **Data Storage**: We store collected data for:  
+  - Service reliability and optimization  
+  - Usage analytics and product insights  
+  - Support and customer service  
+  - Feature development and improvements  
+
+---
+
+### Security
+- **HTTPS Encryption**: All transmitted data is encrypted.  
+- **Secure Storage**: User data and analysis results are stored on secure servers.  
+- **Limited Sharing**: We may share *anonymized* insights with trusted partners for research and improvement—never personal or sensitive data.  
+
+---
+
+### GitHub Actions Environment
+- All processing runs inside GitHub’s secure infrastructure.  
+- Data handling is subject to GitHub’s own [privacy and security policies](https://docs.github.com/en/site-policy).  
+- Analysis results are available both in your workflow logs and on our servers.  
+
+---
+
+### Data Retention
+- **User Metadata**: Retained up to **2 years** or until deletion is requested.  
+- **Analysis Results**: Retained up to **1 year** for service improvement.  
+- **Usage Analytics**: Retained up to **3 years** for long-term product insights.  
+
+---
+
+### Your Rights
+You may exercise the following rights regarding your data:
+- **Access**: Request a copy of your data.  
+- **Correction**: Request updates to inaccurate information.  
+- **Deletion**: Request full data removal.  
+- **Portability**: Request a machine-readable copy of your data.  
+- **Objection**: Opt-out of data processing for specific purposes.  
+
+---
+
+### Contact
+If you have questions or wish to exercise your rights:  
+- GitHub Issues: [Open an issue](https://github.com/ApyGuard/openapi_analyzer/issues)  
+- GitHub Discussions: [Start a discussion](https://github.com/ApyGuard/openapi_analyzer/discussions)  
+
+---
+
+### Changes to This Policy
+We may update this policy periodically. Any changes will be posted here with an updated date.
+
+**Last Updated**: September 2025

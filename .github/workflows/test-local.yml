@@ -1,0 +1,110 @@
+name: Test Action Locally
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of test to run'
+        required: true
+        default: 'single-file'
+        type: choice
+        options:
+        - single-file
+        - repository
+        - comprehensive
+      spec_url:
+        description: 'OpenAPI specification URL (for single-file test)'
+        required: false
+        default: 'https://petstore.swagger.io/v2/swagger.json'
+      repository:
+        description: 'Repository to analyze (for repository test)'
+        required: false
+        default: 'github/rest-api-description'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Test Single File Analysis
+      if: github.event.inputs.test_type == 'single-file'
+      id: test-single
+      uses: ./
+      with:
+        spec_url: ${{ github.event.inputs.spec_url }}
+        output_format: 'json'
+        
+    - name: Test Repository Analysis
+      if: github.event.inputs.test_type == 'repository'
+      id: test-repo
+      uses: ./
+      with:
+        repository: ${{ github.event.inputs.repository }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        output_format: 'summary'
+        
+    - name: Test Comprehensive Analysis
+      if: github.event.inputs.test_type == 'comprehensive'
+      id: test-comp
+      uses: ./
+      with:
+        spec_url: ${{ github.event.inputs.spec_url }}
+        repository: ${{ github.event.inputs.repository }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        output_format: 'json'
+        
+    - name: Display Results
+      run: |
+        echo "Test Results:"
+        echo "============="
+        if [ "${{ github.event.inputs.test_type }}" == "single-file" ]; then
+          echo "Type: Single File Analysis"
+          echo "Spec URL: ${{ github.event.inputs.spec_url }}"
+          echo "Valid: ${{ steps.test-single.outputs.is_valid }}"
+          echo "Suggestions: ${{ steps.test-single.outputs.suggestions_count }}"
+          echo "Operations: ${{ steps.test-single.outputs.operations_count }}"
+          echo "Paths: ${{ steps.test-single.outputs.paths_count }}"
+          echo "Schemas: ${{ steps.test-single.outputs.schemas_count }}"
+        elif [ "${{ github.event.inputs.test_type }}" == "repository" ]; then
+          echo "Type: Repository Analysis"
+          echo "Repository: ${{ github.event.inputs.repository }}"
+          echo "Valid: ${{ steps.test-repo.outputs.is_valid }}"
+          echo "Suggestions: ${{ steps.test-repo.outputs.suggestions_count }}"
+          echo "Operations: ${{ steps.test-repo.outputs.operations_count }}"
+          echo "Paths: ${{ steps.test-repo.outputs.paths_count }}"
+          echo "Schemas: ${{ steps.test-repo.outputs.schemas_count }}"
+          echo "Repository Name: ${{ steps.test-repo.outputs.repository_name }}"
+          echo "Repository Full Name: ${{ steps.test-repo.outputs.repository_full_name }}"
+          echo "Repository URL: ${{ steps.test-repo.outputs.repository_url }}"
+          echo "Repository Stars: ${{ steps.test-repo.outputs.repository_stars }}"
+          echo "Repository Forks: ${{ steps.test-repo.outputs.repository_forks }}"
+        elif [ "${{ github.event.inputs.test_type }}" == "comprehensive" ]; then
+          echo "Type: Comprehensive Analysis"
+          echo "Spec URL: ${{ github.event.inputs.spec_url }}"
+          echo "Repository: ${{ github.event.inputs.repository }}"
+          echo "Valid: ${{ steps.test-comp.outputs.is_valid }}"
+          echo "Suggestions: ${{ steps.test-comp.outputs.suggestions_count }}"
+          echo "Operations: ${{ steps.test-comp.outputs.operations_count }}"
+          echo "Paths: ${{ steps.test-comp.outputs.paths_count }}"
+          echo "Schemas: ${{ steps.test-comp.outputs.schemas_count }}"
+        fi
+        
+    - name: Save Analysis Results
+      run: |
+        mkdir -p test-results
+        if [ "${{ github.event.inputs.test_type }}" == "single-file" ]; then
+          echo "${{ steps.test-single.outputs.analysis }}" > test-results/single-file-analysis.json
+        elif [ "${{ github.event.inputs.test_type }}" == "repository" ]; then
+          echo "${{ steps.test-repo.outputs.analysis }}" > test-results/repository-analysis.json
+        elif [ "${{ github.event.inputs.test_type }}" == "comprehensive" ]; then
+          echo "${{ steps.test-comp.outputs.analysis }}" > test-results/comprehensive-analysis.json
+        fi
+        
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ github.event.inputs.test_type }}
+        path: test-results/
+        retention-days: 7

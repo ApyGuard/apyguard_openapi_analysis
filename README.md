@@ -1,6 +1,6 @@
 # OpenAPI Analyzer
 
-A GitHub Action that analyzes OpenAPI specifications and provides comprehensive feedback on best practices, validation, and documentation quality.
+A comprehensive GitHub Action that analyzes OpenAPI specifications and provides detailed feedback on best practices, validation, and documentation quality. Supports both single file analysis and entire repository scanning.
 
 ## Features
 
@@ -9,10 +9,13 @@ A GitHub Action that analyzes OpenAPI specifications and provides comprehensive 
 - 🛡️ **Security Checks**: Identifies missing security definitions and authentication
 - 📝 **Documentation Quality**: Checks for missing descriptions, examples, and proper schemas
 - 🚀 **Easy Integration**: Simple one-step setup in your GitHub workflows
+- 🏢 **Repository Analysis**: Analyze entire repositories for OpenAPI files
+- 🔍 **Auto-Discovery**: Automatically finds OpenAPI files in repositories
+- 📈 **Repository Metadata**: Get repository information and statistics
 
 ## Usage
 
-### Basic Usage
+### Single OpenAPI File Analysis
 
 ```yaml
 name: Analyze OpenAPI Spec
@@ -27,12 +30,59 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
       
     - name: Analyze OpenAPI Specification
       uses: ApyGuard/openapi_analyzer@v1
       with:
         spec_url: 'https://api.example.com/openapi.json'
+```
+
+### Repository Analysis
+
+```yaml
+name: Analyze Repository OpenAPI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Analyze Repository OpenAPI Files
+      uses: ApyGuard/openapi_analyzer@v1
+      with:
+        repository: ${{ github.repository }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        output_format: 'summary'
+```
+
+### Analyze External Repository
+
+```yaml
+name: Analyze External Repository
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository to analyze (owner/repo)'
+        required: true
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Analyze External Repository
+      uses: ApyGuard/openapi_analyzer@v1
+      with:
+        repository: ${{ github.event.inputs.repository }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ### Advanced Usage
@@ -50,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
       
     - name: Analyze OpenAPI Specification
       id: analyze
@@ -86,7 +136,12 @@ jobs:
 
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
-| `spec_url` | URL to the OpenAPI specification (JSON or YAML) | Yes | - |
+| `spec_url` | URL to the OpenAPI specification (JSON or YAML) | No | - |
+| `repository` | GitHub repository to analyze (format: owner/repo) | No | - |
+| `github_token` | GitHub token for private repositories or higher rate limits | No | - |
+| `output_format` | Output format (json or summary) | No | json |
+
+**Note**: Either `spec_url` or `repository` must be provided.
 
 ## Outputs
 
@@ -98,6 +153,11 @@ jobs:
 | `operations_count` | Number of operations in the spec |
 | `paths_count` | Number of paths in the spec |
 | `schemas_count` | Number of schemas in the spec |
+| `repository_name` | Repository name (when analyzing repositories) |
+| `repository_full_name` | Full repository name (owner/repo) |
+| `repository_url` | Repository URL |
+| `repository_stars` | Number of repository stars |
+| `repository_forks` | Number of repository forks |
 
 ## What the Analyzer Checks
 
@@ -126,6 +186,7 @@ jobs:
 
 ## Example Output
 
+### Single File Analysis
 ```json
 {
   "status": "success",
@@ -145,10 +206,49 @@ jobs:
 }
 ```
 
+### Repository Analysis
+```json
+{
+  "status": "success",
+  "repository": {
+    "name": "my-api",
+    "full_name": "owner/my-api",
+    "description": "My API project",
+    "url": "https://github.com/owner/my-api",
+    "language": "TypeScript",
+    "stars": 150,
+    "forks": 25
+  },
+  "openapi_files": [
+    {
+      "file_info": {
+        "name": "openapi.json",
+        "path": "docs/api/openapi.json",
+        "url": "https://github.com/owner/my-api/blob/main/docs/api/openapi.json",
+        "size": 15420
+      },
+      "status": "success",
+      "is_valid": true,
+      "summary": {
+        "openapi_version": "3.0.0",
+        "paths_count": 5,
+        "operations_count": 12,
+        "schemas_count": 8
+      },
+      "suggestions": [
+        "Operation GET /users missing operationId.",
+        "Parameter userId in path of GET /users/{userId} missing description."
+      ]
+    }
+  ]
+}
+```
+
 ## Requirements
 
 - OpenAPI 3.0+ or Swagger 2.0 specifications
-- Publicly accessible URL to the specification
+- For single file analysis: Publicly accessible URL to the specification
+- For repository analysis: Public repository or GitHub token for private repositories
 - Valid JSON or YAML format
 
 ## Support
@@ -166,6 +266,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 💬 **Discussions**: [GitHub Discussions](https://github.com/ApyGuard/openapi_analyzer/discussions)
 
 ## Changelog
+
+### v2.0.0
+- 🆕 **Repository Analysis**: Analyze entire repositories for OpenAPI files
+- 🆕 **Auto-Discovery**: Automatically finds OpenAPI files in repositories
+- 🆕 **Repository Metadata**: Get repository information and statistics
+- 🆕 **Multiple File Support**: Analyze multiple OpenAPI files in one run
+- 🆕 **Enhanced CLI**: Support for repository analysis via command line
+- 🆕 **GitHub Token Support**: Support for private repositories
+- 🆕 **Output Formats**: JSON and summary output formats
+- 🆕 **Rate Limit Management**: Built-in GitHub API rate limit handling
 
 ### v1.0.0
 - Initial release
