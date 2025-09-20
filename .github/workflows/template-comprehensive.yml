@@ -77,7 +77,13 @@ jobs:
     - name: Set Analysis Results
       id: results
       run: |
+        # Debug: Print current values
+        echo "Debug - analysis_type: ${{ github.event.inputs.analysis_type }}"
+        echo "Debug - spec_url: ${{ github.event.inputs.spec_url }}"
+        echo "Debug - repository: ${{ github.event.inputs.repository }}"
+        
         if [ "${{ github.event.inputs.analysis_type }}" == "single-file" ] || [ "${{ github.event.inputs.analysis_type }}" == null -a "${{ github.event.inputs.spec_url }}" != null ]; then
+          echo "Using single-file analysis"
           echo "analysis_type=single" >> $GITHUB_OUTPUT
           echo "is_valid=${{ steps.analyze-single.outputs.is_valid }}" >> $GITHUB_OUTPUT
           echo "suggestions_count=${{ steps.analyze-single.outputs.suggestions_count }}" >> $GITHUB_OUTPUT
@@ -86,6 +92,7 @@ jobs:
           echo "schemas_count=${{ steps.analyze-single.outputs.schemas_count }}" >> $GITHUB_OUTPUT
           echo "analysis=${{ steps.analyze-single.outputs.analysis }}" >> $GITHUB_OUTPUT
         elif [ "${{ github.event.inputs.analysis_type }}" == "local-file" ]; then
+          echo "Using local-file analysis"
           echo "analysis_type=local" >> $GITHUB_OUTPUT
           echo "is_valid=${{ steps.analyze-local.outputs.is_valid }}" >> $GITHUB_OUTPUT
           echo "suggestions_count=${{ steps.analyze-local.outputs.suggestions_count }}" >> $GITHUB_OUTPUT
@@ -94,6 +101,7 @@ jobs:
           echo "schemas_count=${{ steps.analyze-local.outputs.schemas_count }}" >> $GITHUB_OUTPUT
           echo "analysis=${{ steps.analyze-local.outputs.analysis }}" >> $GITHUB_OUTPUT
         else
+          echo "Using repository analysis (default)"
           echo "analysis_type=repository" >> $GITHUB_OUTPUT
           echo "is_valid=${{ steps.analyze-repo.outputs.is_valid }}" >> $GITHUB_OUTPUT
           echo "suggestions_count=${{ steps.analyze-repo.outputs.suggestions_count }}" >> $GITHUB_OUTPUT
