@@ -37,14 +37,14 @@ jobs:
     - name: Analyze OpenAPI (Single File)
       if: github.event.inputs.analysis_type == 'single-file' || (github.event.inputs.analysis_type == null && github.event.inputs.spec_url != null)
       id: analyze-single
-      uses: ApyGuard/apyguard_openapi_analysis@v1
+      uses: ApyGuard/apyguard_openapi_analysis
       with:
         spec_url: ${{ github.event.inputs.spec_url || 'https://petstore.swagger.io/v2/swagger.json' }}
         
     - name: Analyze OpenAPI (Repository)
       if: github.event.inputs.analysis_type == 'repository' || (github.event.inputs.analysis_type == null && github.event.inputs.repository != null)
       id: analyze-repo
-      uses: ApyGuard/apyguard_openapi_analysis@v1
+      uses: ApyGuard/apyguard_openapi_analysis
       with:
         repository: ${{ github.event.inputs.repository || github.repository }}
         github_token: ${{ secrets.GITHUB_TOKEN }}

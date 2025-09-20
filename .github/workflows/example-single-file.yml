@@ -21,7 +21,7 @@ jobs:
       
     - name: Analyze OpenAPI Specification
       id: analyze
-      uses: ApyGuard/apyguard_openapi_analysis@v1
+      uses: ApyGuard/apyguard_openapi_analysis
       with:
         spec_url: ${{ github.event.inputs.spec_url || 'https://petstore.swagger.io/v2/swagger.json' }}
         

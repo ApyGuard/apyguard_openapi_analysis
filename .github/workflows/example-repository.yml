@@ -17,11 +17,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@4
+      uses: actions/checkout@v4
       
     - name: Analyze Repository OpenAPI Files
       id: analyze
-      uses: ApyGuard/apyguard_openapi_analysis@v1
+      uses: ApyGuard/apyguard_openapi_analysis
       with:
         repository: ${{ github.event.inputs.repository || github.repository }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
