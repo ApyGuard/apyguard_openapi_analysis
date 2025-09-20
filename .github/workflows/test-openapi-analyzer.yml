@@ -1,4 +1,4 @@
-name: Test Action Locally
+name: Test OpenAPI Analyzer
 
 on:
   workflow_dispatch:

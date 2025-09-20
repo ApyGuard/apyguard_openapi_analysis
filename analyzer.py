@@ -96,12 +96,10 @@ def analyze_repository_openapi(owner: str, repo: str, token: Optional[str] = Non
     """Analyze all OpenAPI files found in a repository."""
     print(f"Analyzing repository: {owner}/{repo}")
     
-    # Get repository info
     repo_info = get_repository_info(owner, repo, token)
     if "error" in repo_info:
         return {"status": "error", "message": repo_info["error"]}
     
-    # Find OpenAPI files
     openapi_files = find_openapi_files(owner, repo, token)
     
     if not openapi_files:
@@ -120,20 +118,17 @@ def analyze_repository_openapi(owner: str, repo: str, token: Optional[str] = Non
             "message": "No OpenAPI files found in repository"
         }
     
-    # Analyze each OpenAPI file
     analysis_results = []
     for file_info in openapi_files:
         print(f"Analyzing: {file_info['path']}")
         
         try:
-            # Download and analyze the file
             response = requests.get(file_info["download_url"], timeout=30)
             response.raise_for_status()
             
             spec, parse_suggestions = _load_openapi_from_bytes(response.content)
             
             if spec:
-                # Perform full analysis
                 result = analyze_openapi_spec(spec)
                 result["file_info"] = file_info
                 analysis_results.append(result)
@@ -215,7 +210,6 @@ def set_github_outputs(result: dict):
     _set("paths_count", str(summary.get("paths_count", 0)))
     _set("schemas_count", str(summary.get("schemas_count", 0)))
 
-    # GitHub metadata
     _set("user_actor", os.getenv("GITHUB_ACTOR", ""))
     _set("user_repository", os.getenv("GITHUB_REPOSITORY", ""))
     _set("user_workflow", os.getenv("GITHUB_WORKFLOW", ""))
@@ -824,9 +818,7 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
 
 def analyze_local_file(file_path: str) -> Dict[str, Any]:
     """Analyze a local OpenAPI file."""
-    # Handle GitHub Actions workspace path
     if os.getenv("GITHUB_WORKSPACE"):
-        # If we're in GitHub Actions, the file should be relative to the workspace
         if not os.path.isabs(file_path):
             file_path = os.path.join(os.getenv("GITHUB_WORKSPACE"), file_path)
     
@@ -871,13 +863,11 @@ def main():
     
     args = parser.parse_args()
     
-    # Handle environment variables for GitHub Actions
     url = os.getenv("INPUT_SPEC_URL")
     repo = os.getenv("INPUT_REPOSITORY")
     file_path = os.getenv("INPUT_FILE")
     token = os.getenv("INPUT_GITHUB_TOKEN")
     
-    # Override with command line arguments
     if args.url:
         url = args.url
     if args.repo:
@@ -887,7 +877,6 @@ def main():
     if args.token:
         token = args.token
     
-    # Handle positional argument
     if args.input and not url and not repo and not file_path:
         if "/" in args.input and not args.input.startswith("http") and not os.path.exists(args.input):
             repo = args.input
@@ -906,10 +895,8 @@ def main():
         sys.exit(1)
     
     if url:
-        # Analyze single OpenAPI URL
         result = analyze_openapi_url(url)
     elif repo:
-        # Analyze repository
         if "/" not in repo:
             print("Repository must be in format 'owner/repo'")
             sys.exit(1)
@@ -917,7 +904,6 @@ def main():
         owner, repo_name = repo.split("/", 1)
         result = analyze_repository_openapi(owner, repo_name, token)
     elif file_path:
-        # Analyze local file
         result = analyze_local_file(file_path)
     else:
         print("No input provided")
@@ -937,7 +923,6 @@ def main():
             set_output("paths_count", str(summary.get("paths_count", 0)))
             set_output("schemas_count", str(summary.get("schemas_count", 0)))
         
-        # Repository information
         if "repository" in result:
             repo_info = result["repository"]
             set_output("repository_name", repo_info.get("name", ""))
@@ -946,7 +931,6 @@ def main():
             set_output("repository_stars", str(repo_info.get("stars", 0)))
             set_output("repository_forks", str(repo_info.get("forks", 0)))
     
-    # Output results
     if args.output == "summary":
         if "repository" in result:
             repo_info = result["repository"]
@@ -969,7 +953,6 @@ def main():
                     if "suggestions" in file_result:
                         print(f"     Suggestions: {len(file_result['suggestions'])}")
         else:
-            # Single file analysis
             if "summary" in result:
                 summary = result["summary"]
                 print(f"\nOpenAPI Analysis Summary:")
