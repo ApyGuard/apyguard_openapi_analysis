@@ -7,4 +7,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY analyzer.py .
 
-ENTRYPOINT ["python", "analyzer.py"]
+# Make the script executable and available from any working directory
+RUN chmod +x analyzer.py
+
+ENTRYPOINT ["python", "/app/analyzer.py"]
