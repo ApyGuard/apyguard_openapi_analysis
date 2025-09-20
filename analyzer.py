@@ -824,6 +824,12 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
 
 def analyze_local_file(file_path: str) -> Dict[str, Any]:
     """Analyze a local OpenAPI file."""
+    # Handle GitHub Actions workspace path
+    if os.getenv("GITHUB_WORKSPACE"):
+        # If we're in GitHub Actions, the file should be relative to the workspace
+        if not os.path.isabs(file_path):
+            file_path = os.path.join(os.getenv("GITHUB_WORKSPACE"), file_path)
+    
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
