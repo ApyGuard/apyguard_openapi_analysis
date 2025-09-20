@@ -874,7 +874,6 @@ def main():
         print("No input provided")
         sys.exit(1)
     
-    # Set GitHub Actions outputs if running in GitHub Actions
     if os.getenv("GITHUB_ACTIONS"):
         def set_output(name: str, value: str):
             print(f"::set-output name={name}::{value}")
