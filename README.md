@@ -15,6 +15,20 @@ A comprehensive GitHub Action that analyzes OpenAPI specifications and provides 
 
 ## Usage
 
+### Quick Start with Workflow Templates
+
+We provide ready-to-use workflow templates that you can copy to your repository:
+
+1. **Copy a workflow template** from `.github/workflows/template-*.yml` to your repository's `.github/workflows/` directory
+2. **Rename the file** to something like `openapi-analysis.yml`
+3. **Customize the triggers** (branches, events) as needed
+4. **Commit and push** - the workflow will run automatically
+
+Available templates:
+- `template-single-file.yml` - Analyze a single OpenAPI file
+- `template-repository.yml` - Analyze all OpenAPI files in a repository
+- `template-comprehensive.yml` - Advanced workflow with multiple analysis types
+
 ### Single OpenAPI File Analysis
 
 ```yaml

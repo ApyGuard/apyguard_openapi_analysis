@@ -1,10 +1,10 @@
-name: Analyze Single OpenAPI File
+name: Analyze OpenAPI File
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
   workflow_dispatch:
     inputs:
       spec_url:
@@ -21,7 +21,7 @@ jobs:
       
     - name: Analyze OpenAPI Specification
       id: analyze
-      uses: ApyGuard/apyguard_openapi_analysis
+      uses: ApyGuard/apyguard_openapi_analysis@main
       with:
         spec_url: ${{ github.event.inputs.spec_url || 'https://petstore.swagger.io/v2/swagger.json' }}
         

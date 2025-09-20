@@ -2,9 +2,9 @@ name: Analyze Repository OpenAPI Files
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
   workflow_dispatch:
     inputs:
       repository:
@@ -21,7 +21,7 @@ jobs:
       
     - name: Analyze Repository OpenAPI Files
       id: analyze
-      uses: ApyGuard/apyguard_openapi_analysis
+      uses: ApyGuard/apyguard_openapi_analysis@main
       with:
         repository: ${{ github.event.inputs.repository || github.repository }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
