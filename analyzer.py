@@ -822,11 +822,44 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
 
 # --- CLI Entrypoint ---
 
+def analyze_local_file(file_path: str) -> Dict[str, Any]:
+    """Analyze a local OpenAPI file."""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        spec, parse_suggestions = _load_openapi_from_bytes(content.encode('utf-8'))
+        
+        if spec:
+            result = analyze_openapi_spec(spec)
+            result["file_path"] = file_path
+            return result
+        else:
+            return {
+                "status": "error",
+                "message": "Failed to parse OpenAPI spec",
+                "suggestions": parse_suggestions,
+                "file_path": file_path
+            }
+    except FileNotFoundError:
+        return {
+            "status": "error",
+            "message": f"File not found: {file_path}",
+            "file_path": file_path
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Error reading file: {e}",
+            "file_path": file_path
+        }
+
 def main():
     parser = argparse.ArgumentParser(description="OpenAPI Analyzer - Analyze OpenAPI specifications")
-    parser.add_argument("input", nargs="?", help="OpenAPI URL or repository (owner/repo)")
+    parser.add_argument("input", nargs="?", help="OpenAPI URL, repository (owner/repo), or local file path")
     parser.add_argument("--url", help="OpenAPI specification URL")
     parser.add_argument("--repo", help="GitHub repository (owner/repo)")
+    parser.add_argument("--file", help="Local OpenAPI file path")
     parser.add_argument("--token", help="GitHub token for private repositories")
     parser.add_argument("--output", choices=["json", "summary"], default="json", help="Output format")
     
@@ -842,20 +875,28 @@ def main():
         url = args.url
     if args.repo:
         repo = args.repo
+    if args.file:
+        file_path = args.file
+    else:
+        file_path = None
     if args.token:
         token = args.token
     
     # Handle positional argument
-    if args.input and not url and not repo:
-        if "/" in args.input and not args.input.startswith("http"):
+    if args.input and not url and not repo and not file_path:
+        if "/" in args.input and not args.input.startswith("http") and not os.path.exists(args.input):
             repo = args.input
+        elif os.path.exists(args.input):
+            file_path = args.input
         else:
             url = args.input
     
-    if not url and not repo:
+    if not url and not repo and not file_path:
         print("Usage: python analyzer.py <openapi-url>")
         print("       python analyzer.py --repo owner/repo")
         print("       python analyzer.py --url <openapi-url>")
+        print("       python analyzer.py --file <local-file-path>")
+        print("       python analyzer.py <local-file-path>")
         print("Or set INPUT_SPEC_URL or INPUT_REPOSITORY environment variable for GitHub Actions")
         sys.exit(1)
     
@@ -870,6 +911,9 @@ def main():
         
         owner, repo_name = repo.split("/", 1)
         result = analyze_repository_openapi(owner, repo_name, token)
+    elif file_path:
+        # Analyze local file
+        result = analyze_local_file(file_path)
     else:
         print("No input provided")
         sys.exit(1)
