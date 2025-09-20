@@ -18,7 +18,7 @@ A comprehensive GitHub Action that analyzes OpenAPI specifications and provides 
 
 ### Option 1: Using the GitHub Action (Recommended)
 
-Add this workflow to your repository (`.github/workflows/openapi-analysis.yml`):
+The action is now fully tested and works reliably with all repository types. Add this workflow to your repository (`.github/workflows/openapi-analysis.yml`):
 
 ```yaml
 name: OpenAPI Analysis
@@ -50,16 +50,19 @@ jobs:
       id: analyze
       uses: ApyGuard/apyguard_openapi_analysis@main
       with:
+        # Change this to your OpenAPI file path
         file: your-openapi-file.json
         output_format: json
         
-    - name: Upload analysis results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: openapi-analysis-results
-        path: analysis-results.json
-        retention-days: 30
+    - name: Display Results
+      run: |
+        echo "OpenAPI Analysis Results:"
+        echo "========================="
+        echo "Valid: ${{ steps.analyze.outputs.is_valid }}"
+        echo "Suggestions: ${{ steps.analyze.outputs.suggestions_count }}"
+        echo "Operations: ${{ steps.analyze.outputs.operations_count }}"
+        echo "Paths: ${{ steps.analyze.outputs.paths_count }}"
+        echo "Schemas: ${{ steps.analyze.outputs.schemas_count }}"
         
     - name: Comment on PR
       if: github.event_name == 'pull_request'
@@ -78,9 +81,7 @@ jobs:
           ${analysis.suggestions && analysis.suggestions.length > 0 ? 
             `### 📋 Top Suggestions:\n\n${analysis.suggestions.slice(0, 5).map(s => `- ${s}`).join('\n')}` : 
             '### ✅ No suggestions found! Your OpenAPI specification looks great! 🎉'
-          }
-          
-          Detailed results are available in the workflow artifacts.`;
+          }`;
             
           github.rest.issues.createComment({
             issue_number: context.issue.number,
@@ -346,7 +347,14 @@ Ensure the workflow has permission to read your OpenAPI files.
 Check that your file has a `.json`, `.yaml`, or `.yml` extension and is in the repository.
 
 ### Docker Issues
-If you encounter Docker-related issues, use the self-contained workflow (Option 1) which doesn't rely on Docker images.
+The action uses Docker containers to ensure consistent execution across different environments. If you encounter Docker-related issues:
+
+1. **Check GitHub Actions logs** for specific error messages
+2. **Verify file paths** are correct relative to your repository root
+3. **Ensure proper permissions** for the workflow to access your files
+4. **Check network connectivity** if analyzing from URLs
+
+The Docker container is configured to work with GitHub Actions' working directory (`/github/workspace`) and will automatically find your OpenAPI files.
 
 ## Requirements
 
@@ -367,6 +375,12 @@ For support and questions:
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Changelog
+
+### v2.1.0
+- 🔧 **Docker Fix**: Fixed Docker container to work correctly with GitHub Actions working directory
+- 🔧 **Path Resolution**: Improved file path handling for local OpenAPI files
+- 🔧 **Container Stability**: Enhanced Docker container reliability across different environments
+- ✅ **Verified Compatibility**: Tested with multiple repository types and file structures
 
 ### v2.0.0
 - 🆕 **Repository Analysis**: Analyze entire repositories for OpenAPI files
