@@ -376,13 +376,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Changelog
 
-### v2.1.0
+### v1.0.2
 - 🔧 **Docker Fix**: Fixed Docker container to work correctly with GitHub Actions working directory
 - 🔧 **Path Resolution**: Improved file path handling for local OpenAPI files
 - 🔧 **Container Stability**: Enhanced Docker container reliability across different environments
 - ✅ **Verified Compatibility**: Tested with multiple repository types and file structures
 
-### v2.0.0
+### v1.0.1
 - 🆕 **Repository Analysis**: Analyze entire repositories for OpenAPI files
 - 🆕 **Auto-Discovery**: Automatically finds OpenAPI files in repositories
 - 🆕 **Repository Metadata**: Get repository information and statistics
