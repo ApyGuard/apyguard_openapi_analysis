@@ -18,6 +18,7 @@ on:
         options:
         - repository
         - single-file
+        - local-file
       spec_url:
         description: 'OpenAPI specification URL (for single-file analysis)'
         required: false
@@ -41,6 +42,29 @@ jobs:
       with:
         spec_url: ${{ github.event.inputs.spec_url || 'https://petstore.swagger.io/v2/swagger.json' }}
         
+    - name: Analyze Local OpenAPI File
+      if: github.event.inputs.analysis_type == 'local-file'
+      id: analyze-local
+      run: |
+        echo "Analyzing local OpenAPI file: test-swagger.json"
+        python3 analyzer.py test-swagger.json > local-analysis.json
+        echo "analysis<<EOF" >> $GITHUB_OUTPUT
+        cat local-analysis.json >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+        # Extract individual values for outputs
+        is_valid=$(python3 -c "import json; data=json.load(open('local-analysis.json')); print(data.get('is_valid', False))")
+        suggestions_count=$(python3 -c "import json; data=json.load(open('local-analysis.json')); print(len(data.get('suggestions', [])))")
+        operations_count=$(python3 -c "import json; data=json.load(open('local-analysis.json')); print(data.get('summary', {}).get('operations_count', 0))")
+        paths_count=$(python3 -c "import json; data=json.load(open('local-analysis.json')); print(data.get('summary', {}).get('paths_count', 0))")
+        schemas_count=$(python3 -c "import json; data=json.load(open('local-analysis.json')); print(data.get('summary', {}).get('schemas_count', 0))")
+        
+        echo "is_valid=$is_valid" >> $GITHUB_OUTPUT
+        echo "suggestions_count=$suggestions_count" >> $GITHUB_OUTPUT
+        echo "operations_count=$operations_count" >> $GITHUB_OUTPUT
+        echo "paths_count=$paths_count" >> $GITHUB_OUTPUT
+        echo "schemas_count=$schemas_count" >> $GITHUB_OUTPUT
+        
     - name: Analyze OpenAPI (Repository)
       if: github.event.inputs.analysis_type == 'repository' || (github.event.inputs.analysis_type == null && github.event.inputs.repository != null)
       id: analyze-repo
@@ -61,6 +85,14 @@ jobs:
           echo "paths_count=${{ steps.analyze-single.outputs.paths_count }}" >> $GITHUB_OUTPUT
           echo "schemas_count=${{ steps.analyze-single.outputs.schemas_count }}" >> $GITHUB_OUTPUT
           echo "analysis=${{ steps.analyze-single.outputs.analysis }}" >> $GITHUB_OUTPUT
+        elif [ "${{ github.event.inputs.analysis_type }}" == "local-file" ]; then
+          echo "analysis_type=local" >> $GITHUB_OUTPUT
+          echo "is_valid=${{ steps.analyze-local.outputs.is_valid }}" >> $GITHUB_OUTPUT
+          echo "suggestions_count=${{ steps.analyze-local.outputs.suggestions_count }}" >> $GITHUB_OUTPUT
+          echo "operations_count=${{ steps.analyze-local.outputs.operations_count }}" >> $GITHUB_OUTPUT
+          echo "paths_count=${{ steps.analyze-local.outputs.paths_count }}" >> $GITHUB_OUTPUT
+          echo "schemas_count=${{ steps.analyze-local.outputs.schemas_count }}" >> $GITHUB_OUTPUT
+          echo "analysis=${{ steps.analyze-local.outputs.analysis }}" >> $GITHUB_OUTPUT
         else
           echo "analysis_type=repository" >> $GITHUB_OUTPUT
           echo "is_valid=${{ steps.analyze-repo.outputs.is_valid }}" >> $GITHUB_OUTPUT

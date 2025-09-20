@@ -12,6 +12,7 @@ on:
         - single-file
         - repository
         - comprehensive
+        - local-file
       spec_url:
         description: 'OpenAPI specification URL (for single-file test)'
         required: false
@@ -55,6 +56,29 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         output_format: 'json'
         
+    - name: Test Local File Analysis
+      if: github.event.inputs.test_type == 'local-file'
+      id: test-local
+      run: |
+        echo "Testing local OpenAPI file analysis..."
+        python3 analyzer.py test-swagger.json > local-test-results.json
+        
+        # Extract results for display
+        is_valid=$(python3 -c "import json; data=json.load(open('local-test-results.json')); print(data.get('is_valid', False))")
+        suggestions_count=$(python3 -c "import json; data=json.load(open('local-test-results.json')); print(len(data.get('suggestions', [])))")
+        operations_count=$(python3 -c "import json; data=json.load(open('local-test-results.json')); print(data.get('summary', {}).get('operations_count', 0))")
+        paths_count=$(python3 -c "import json; data=json.load(open('local-test-results.json')); print(data.get('summary', {}).get('paths_count', 0))")
+        schemas_count=$(python3 -c "import json; data=json.load(open('local-test-results.json')); print(data.get('summary', {}).get('schemas_count', 0))")
+        
+        echo "is_valid=$is_valid" >> $GITHUB_OUTPUT
+        echo "suggestions_count=$suggestions_count" >> $GITHUB_OUTPUT
+        echo "operations_count=$operations_count" >> $GITHUB_OUTPUT
+        echo "paths_count=$paths_count" >> $GITHUB_OUTPUT
+        echo "schemas_count=$schemas_count" >> $GITHUB_OUTPUT
+        echo "analysis<<EOF" >> $GITHUB_OUTPUT
+        cat local-test-results.json >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
     - name: Display Results
       run: |
         echo "Test Results:"
@@ -89,6 +113,14 @@ jobs:
           echo "Operations: ${{ steps.test-comp.outputs.operations_count }}"
           echo "Paths: ${{ steps.test-comp.outputs.paths_count }}"
           echo "Schemas: ${{ steps.test-comp.outputs.schemas_count }}"
+        elif [ "${{ github.event.inputs.test_type }}" == "local-file" ]; then
+          echo "Type: Local File Analysis"
+          echo "File: test-swagger.json"
+          echo "Valid: ${{ steps.test-local.outputs.is_valid }}"
+          echo "Suggestions: ${{ steps.test-local.outputs.suggestions_count }}"
+          echo "Operations: ${{ steps.test-local.outputs.operations_count }}"
+          echo "Paths: ${{ steps.test-local.outputs.paths_count }}"
+          echo "Schemas: ${{ steps.test-local.outputs.schemas_count }}"
         fi
         
     - name: Save Analysis Results
@@ -100,6 +132,8 @@ jobs:
           echo "${{ steps.test-repo.outputs.analysis }}" > test-results/repository-analysis.json
         elif [ "${{ github.event.inputs.test_type }}" == "comprehensive" ]; then
           echo "${{ steps.test-comp.outputs.analysis }}" > test-results/comprehensive-analysis.json
+        elif [ "${{ github.event.inputs.test_type }}" == "local-file" ]; then
+          cp local-test-results.json test-results/local-file-analysis.json
         fi
         
     - name: Upload Test Results
