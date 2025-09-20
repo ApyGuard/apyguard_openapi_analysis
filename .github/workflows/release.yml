@@ -78,7 +78,7 @@ jobs:
           ### Usage
           ```yaml
           - name: Analyze OpenAPI Specification
-            uses: ApyGuard/openapi_analyzer@${{ steps.version.outputs.version }}
+            uses: ApyGuard/apyguard_openapi_analysis@${{ steps.version.outputs.version }}
             with:
               spec_url: 'https://api.example.com/openapi.json'
           ```

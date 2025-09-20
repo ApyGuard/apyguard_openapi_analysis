@@ -33,7 +33,7 @@ jobs:
       uses: actions/checkout@v3
       
     - name: Analyze OpenAPI Specification
-      uses: ApyGuard/openapi_analyzer@v1
+      uses: ApyGuard/apyguard_openapi_analysis@v1
       with:
         spec_url: 'https://api.example.com/openapi.json'
 ```
@@ -56,7 +56,7 @@ jobs:
       uses: actions/checkout@v3
       
     - name: Analyze Repository OpenAPI Files
-      uses: ApyGuard/openapi_analyzer@v1
+      uses: ApyGuard/apyguard_openapi_analysis@v1
       with:
         repository: ${{ github.repository }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Analyze External Repository
-      uses: ApyGuard/openapi_analyzer@v1
+      uses: ApyGuard/apyguard_openapi_analysis@v1
       with:
         repository: ${{ github.event.inputs.repository }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -104,7 +104,7 @@ jobs:
       
     - name: Analyze OpenAPI Specification
       id: analyze
-      uses: ApyGuard/openapi_analyzer@v1
+      uses: ApyGuard/apyguard_openapi_analysis@v1
       with:
         spec_url: 'https://api.example.com/openapi.json'
         

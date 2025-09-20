@@ -21,7 +21,7 @@ jobs:
       
     - name: Analyze Repository OpenAPI Files
       id: analyze
-      uses: ApyGuard/openapi_analyzer@v1
+      uses: ApyGuard/apyguard_openapi_analysis@v1
       with:
         repository: ${{ github.event.inputs.repository || github.repository }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
