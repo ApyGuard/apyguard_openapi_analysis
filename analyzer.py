@@ -868,6 +868,7 @@ def main():
     # Handle environment variables for GitHub Actions
     url = os.getenv("INPUT_SPEC_URL")
     repo = os.getenv("INPUT_REPOSITORY")
+    file_path = os.getenv("INPUT_FILE")
     token = os.getenv("INPUT_GITHUB_TOKEN")
     
     # Override with command line arguments
@@ -877,8 +878,6 @@ def main():
         repo = args.repo
     if args.file:
         file_path = args.file
-    else:
-        file_path = None
     if args.token:
         token = args.token
     

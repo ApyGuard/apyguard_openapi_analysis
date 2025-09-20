@@ -11,6 +11,9 @@ inputs:
   repository:
     description: "GitHub repository to analyze (format: owner/repo)"
     required: false
+  file:
+    description: "Local OpenAPI file path (relative to repository root)"
+    required: false
   github_token:
     description: "GitHub token for private repositories or higher rate limits"
     required: false

@@ -66,7 +66,7 @@ jobs:
         echo "schemas_count=$schemas_count" >> $GITHUB_OUTPUT
         
     - name: Analyze OpenAPI (Repository)
-      if: github.event.inputs.analysis_type == 'repository' || (github.event.inputs.analysis_type == null && github.event.inputs.repository != null)
+      if: github.event.inputs.analysis_type == 'repository' || (github.event.inputs.analysis_type == null && github.event.inputs.repository != null) || (github.event.inputs.analysis_type == null && github.event.inputs.spec_url == null)
       id: analyze-repo
       uses: ApyGuard/apyguard_openapi_analysis@main
       with:

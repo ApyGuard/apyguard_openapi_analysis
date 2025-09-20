@@ -1,0 +1,38 @@
+# Example of how to use the OpenAPI Analyzer action in another repository
+
+name: Analyze OpenAPI in My Repository
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze-openapi:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Option 1: Analyze a specific OpenAPI file URL
+    - name: Analyze OpenAPI from URL
+      uses: ApyGuard/apyguard_openapi_analysis@main
+      with:
+        spec_url: 'https://petstore.swagger.io/v2/swagger.json'
+        output_format: 'json'
+        
+    # Option 2: Analyze a local OpenAPI file in your repository
+    - name: Analyze local OpenAPI file
+      uses: ApyGuard/apyguard_openapi_analysis@main
+      with:
+        file: 'test-swagger.json'  # Path to your OpenAPI file
+        output_format: 'json'
+        
+    # Option 3: Analyze OpenAPI files found in this repository
+    - name: Analyze OpenAPI files in repository
+      uses: ApyGuard/apyguard_openapi_analysis@main
+      with:
+        repository: ${{ github.repository }}
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        output_format: 'summary'
