@@ -47,15 +47,19 @@ jobs:
         echo "version_without_v=${VERSION#v}" >> $GITHUB_OUTPUT
         echo "Released version: ${VERSION}"
     
+    - name: Prepare repository name (lowercase)
+      id: repo
+      run: echo "repo=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+    
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
       with:
         context: .
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}:latest
-          ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
-          ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version_without_v }}
+          ghcr.io/${{ steps.repo.outputs.repo }}:latest
+          ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
+          ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version_without_v }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
     
@@ -85,7 +89,7 @@ jobs:
           
           ### Docker Image
           ```bash
-          docker pull ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
+          docker pull ghcr.io/${{ steps.repo.outputs.repo }}:${{ steps.version.outputs.version }}
           ```
           
           ### Full Changelog
