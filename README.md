@@ -13,8 +13,82 @@ A comprehensive GitHub Action that analyzes OpenAPI specifications and provides 
 - 🔍 **Auto-Discovery**: Automatically finds OpenAPI files in repositories
 - 📈 **Repository Metadata**: Get repository information and statistics
 - 📁 **Local File Support**: Analyze local OpenAPI files in your repository
+- 🔄 **Version-Aware**: Supports OpenAPI 3.x and Swagger 2.0 (v2) specs
 
 ## Quick Start
+
+### Example Usage
+
+```yaml
+name: OpenAPI Analysis
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**/*.json'
+      - '**/*.yaml'
+      - '**/*.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - '**/*.json'
+      - '**/*.yaml'
+      - '**/*.yml'
+  workflow_dispatch:
+
+jobs:
+  analyze-openapi:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Analyze OpenAPI
+      id: analyze
+      uses: ApyGuard/apyguard_openapi_analysis@main
+      with:
+        # Change this to your OpenAPI file path
+        file: your-openapi-file.json
+        output_format: json
+        
+    - name: Display Results
+      run: |
+        echo "OpenAPI Analysis Results:"
+        echo "========================="
+        echo "Valid: ${{ steps.analyze.outputs.is_valid }}"
+        echo "Suggestions: ${{ steps.analyze.outputs.suggestions_count }}"
+        echo "Operations: ${{ steps.analyze.outputs.operations_count }}"
+        echo "Paths: ${{ steps.analyze.outputs.paths_count }}"
+        echo "Schemas: ${{ steps.analyze.outputs.schemas_count }}"
+        
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const analysis = JSON.parse('${{ steps.analyze.outputs.analysis }}');
+          const comment = `## 🔍 OpenAPI Analysis Results
+          
+          **Valid**: ${analysis.is_valid ? '✅' : '❌'}
+          **Suggestions**: ${analysis.suggestions ? analysis.suggestions.length : 0}
+          **Operations**: ${analysis.summary ? analysis.summary.operations_count : 0}
+          **Paths**: ${analysis.summary ? analysis.summary.paths_count : 0}
+          **Schemas**: ${analysis.summary ? analysis.summary.schemas_count : 0}
+          
+          ${analysis.suggestions && analysis.suggestions.length > 0 ? 
+            `### 📋 Top Suggestions:\n\n${analysis.suggestions.slice(0, 5).map(s => `- ${s}`).join('\n')}` : 
+            '### ✅ No suggestions found! Your OpenAPI specification looks great! 🎉'
+          }`;
+            
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+```
 
 ### Option 1: Using the GitHub Action (Recommended)
 
@@ -358,7 +432,7 @@ The Docker container is configured to work with GitHub Actions' working director
 
 ## Requirements
 
-- OpenAPI 3.0+ or Swagger 2.0 specifications
+- OpenAPI 3.0+ or Swagger 2.0 specifications (v2 is automatically normalized to v3-like structure)
 - For single file analysis: Publicly accessible URL to the specification
 - For repository analysis: Public repository or GitHub token for private repositories
 - Valid JSON or YAML format

@@ -184,6 +184,136 @@ def _load_openapi_from_bytes(data: bytes) -> Tuple[Optional[dict], List[str]]:
     return loaded, suggestions
 
 
+def _is_openapi_v2(spec: dict) -> bool:
+    """Return True if spec looks like Swagger/OpenAPI v2.0."""
+    swagger = spec.get("swagger")
+    if isinstance(swagger, str) and swagger.startswith("2."):
+        return True
+    return False
+
+
+def _normalize_v2_to_v3ish(spec: dict) -> dict:
+    """Normalize a Swagger 2.0 spec into a v3-like shape so downstream rules work.
+
+    This does not attempt full fidelity conversion; it maps common fields used by
+    our analyzer: components.schemas, components.securitySchemes, servers,
+    requestBody/content, and response.content schemas.
+    """
+    import copy
+
+    v2 = copy.deepcopy(spec)
+    normalized: Dict[str, Any] = copy.deepcopy(spec)
+
+    # Mark original version and normalized hint
+    normalized.setdefault("x-original-version", v2.get("swagger", "2.0"))
+    normalized["x-normalized"] = True
+
+    # components
+    components: Dict[str, Any] = normalized.get("components") or {}
+    if not isinstance(components, dict):
+        components = {}
+    # definitions -> components.schemas
+    if isinstance(v2.get("definitions"), dict):
+        components.setdefault("schemas", v2.get("definitions", {}))
+    # securityDefinitions -> components.securitySchemes
+    if isinstance(v2.get("securityDefinitions"), dict):
+        components.setdefault("securitySchemes", v2.get("securityDefinitions", {}))
+    normalized["components"] = components
+
+    # servers from host/basePath/schemes
+    if not normalized.get("servers"):
+        host = v2.get("host")
+        base_path = v2.get("basePath", "")
+        schemes = v2.get("schemes") or ["https"]
+        servers: List[Dict[str, Any]] = []
+        if host:
+            for sch in schemes:
+                url = f"{sch}://{host}{base_path}"
+                servers.append({"url": url})
+        elif base_path:
+            servers.append({"url": base_path})
+        if servers:
+            normalized["servers"] = servers
+
+    # paths: map body/formData parameters -> requestBody; map responses.schema -> content
+    paths = normalized.get("paths") or {}
+    if isinstance(paths, dict):
+        for path_item, methods in list(paths.items()):
+            if not isinstance(methods, dict):
+                continue
+            for method, details in list(methods.items()):
+                if not isinstance(details, dict):
+                    continue
+
+                # Request body from parameters (in: body or formData)
+                params = details.get("parameters", [])
+                body_schema = None
+                body_required = False
+                media_types: List[str] = []
+
+                # Derive consumes for this operation (operation consumes overrides global)
+                op_consumes = details.get("consumes") or v2.get("consumes") or ["application/json"]
+                if isinstance(op_consumes, list):
+                    media_types = op_consumes
+
+                new_params: List[Any] = []
+                if isinstance(params, list):
+                    for p in params:
+                        if not isinstance(p, dict):
+                            continue
+                        loc = p.get("in")
+                        if loc == "body":
+                            body_schema = p.get("schema")
+                            body_required = bool(p.get("required"))
+                        elif loc == "formData":
+                            # Represent formData as application/x-www-form-urlencoded if no file, else multipart/form-data
+                            mt = "application/x-www-form-urlencoded"
+                            if p.get("type") == "file":
+                                mt = "multipart/form-data"
+                            if mt not in media_types:
+                                media_types.append(mt)
+                            # Synthesize a schema property for this field
+                            if body_schema is None:
+                                body_schema = {"type": "object", "properties": {}, "required": []}
+                            if isinstance(body_schema, dict):
+                                props = body_schema.setdefault("properties", {})
+                                if isinstance(props, dict):
+                                    props[p.get("name", "field")] = {k: v for k, v in p.items() if k in ["type", "format", "description", "items"]}
+                                    if p.get("required"):
+                                        body_schema.setdefault("required", []).append(p.get("name", "field"))
+                        else:
+                            new_params.append(p)
+                # Write back filtered params
+                if params != new_params:
+                    details["parameters"] = new_params
+
+                # Create requestBody if we found body/formData
+                if body_schema is not None and "requestBody" not in details:
+                    content_obj: Dict[str, Any] = {}
+                    for mt in media_types or ["application/json"]:
+                        content_obj[mt] = {"schema": body_schema}
+                    details["requestBody"] = {
+                        "required": body_required,
+                        "content": content_obj
+                    }
+
+                # Responses: map schema+produces -> content
+                produces = details.get("produces") or v2.get("produces") or ["application/json"]
+                responses = details.get("responses", {})
+                if isinstance(responses, dict):
+                    for code, resp in list(responses.items()):
+                        if not isinstance(resp, dict):
+                            continue
+                        # If content already exists, skip
+                        if "content" in resp:
+                            continue
+                        schema = resp.get("schema")
+                        if schema is not None:
+                            resp["content"] = {mt: {"schema": schema} for mt in produces}
+
+    return normalized
+
+
 def _validate_with_openapi_spec_validator(spec: dict) -> List[str]:
     suggestions: List[str] = []
     try:
@@ -252,6 +382,11 @@ def analyze_openapi_spec(spec: dict) -> Dict[str, Any]:
     """Analyze an OpenAPI specification dictionary."""
     suggestions: List[str] = []
     
+    # Normalize v2 specs to v3-like structure for consistent checks
+    original_version = spec.get("openapi") or spec.get("swagger")
+    if _is_openapi_v2(spec):
+        spec = _normalize_v2_to_v3ish(spec)
+    
     suggestions.extend(_validate_with_openapi_spec_validator(spec))
 
     info = spec.get("info", {})
@@ -262,7 +397,7 @@ def analyze_openapi_spec(spec: dict) -> Dict[str, Any]:
     if not info.get("version"):
         suggestions.append("Spec should define an API version.")
 
-    openapi_version = spec.get("openapi") or spec.get("swagger")
+    openapi_version = spec.get("openapi") or original_version
     paths = spec.get("paths") or {}
     components = spec.get("components", {})
     schemas = components.get("schemas", {}) if isinstance(components, dict) else {}
@@ -318,12 +453,8 @@ def analyze_openapi_spec(spec: dict) -> Dict[str, Any]:
                 if not param.replace("_", "").replace("-", "").isalnum():
                     suggestions.append(f"Path parameter '{param}' in '{path}' should use alphanumeric characters only.")
 
-    operations_count = sum(
-        1 for path, methods in (paths or {}).items() if isinstance(methods, dict)
-        for method in methods.keys() if method.lower() in [
-            "get", "post", "put", "delete", "patch", "options", "head", "trace"
-        ]
-    )
+    # Count operations once while iterating
+    operations_count = 0
     seen_operation_ids = set()
     for path, methods in paths.items():
         if not isinstance(methods, dict):
@@ -540,6 +671,11 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
     if not spec:
         return {"status": "error", "errors": errors, "is_valid": False}
 
+    # Normalize v2 specs to v3-like structure for consistent checks
+    original_version = spec.get("openapi") or spec.get("swagger")
+    if _is_openapi_v2(spec):
+        spec = _normalize_v2_to_v3ish(spec)
+
     suggestions.extend(_validate_with_openapi_spec_validator(spec))
 
     info = spec.get("info", {})
@@ -550,7 +686,7 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
     if not info.get("version"):
         suggestions.append("Spec should define an API version.")
 
-    openapi_version = spec.get("openapi") or spec.get("swagger")
+    openapi_version = spec.get("openapi") or original_version
     paths = spec.get("paths") or {}
     components = spec.get("components", {})
     schemas = components.get("schemas", {}) if isinstance(components, dict) else {}
@@ -606,12 +742,7 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
                 if not param.replace("_", "").replace("-", "").isalnum():
                     suggestions.append(f"Path parameter '{param}' in '{path}' should use alphanumeric characters only.")
 
-    operations_count = sum(
-        1 for path, methods in (paths or {}).items() if isinstance(methods, dict)
-        for method in methods.keys() if method.lower() in [
-            "get", "post", "put", "delete", "patch", "options", "head", "trace"
-        ]
-    )
+    operations_count = 0
     seen_operation_ids = set()
     for path, methods in paths.items():
         if not isinstance(methods, dict):
