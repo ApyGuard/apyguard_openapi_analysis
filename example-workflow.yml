@@ -36,13 +36,30 @@ jobs:
         
     - name: Display Results
       run: |
-        echo "OpenAPI Analysis Results:"
-        echo "========================="
-        echo "Valid: ${{ steps.analyze.outputs.is_valid }}"
-        echo "Suggestions: ${{ steps.analyze.outputs.suggestions_count }}"
-        echo "Operations: ${{ steps.analyze.outputs.operations_count }}"
-        echo "Paths: ${{ steps.analyze.outputs.paths_count }}"
-        echo "Schemas: ${{ steps.analyze.outputs.schemas_count }}"
+        echo "🔍 OpenAPI Analysis Results:"
+        echo "============================"
+        echo "✅ Valid: ${{ steps.analyze.outputs.is_valid }}"
+        echo "📊 Basic Metrics:"
+        echo "  - Operations: ${{ steps.analyze.outputs.operations_count }}"
+        echo "  - Paths: ${{ steps.analyze.outputs.paths_count }}"
+        echo "  - Schemas: ${{ steps.analyze.outputs.schemas_count }}"
+        echo "  - Total Suggestions: ${{ steps.analyze.outputs.suggestions_count }}"
+        echo ""
+        echo "🎯 Advanced Analytics:"
+        echo "  - Complexity Score: ${{ steps.analyze.outputs.complexity_score }}"
+        echo "  - Maintainability Score: ${{ steps.analyze.outputs.maintainability_score }}"
+        echo ""
+        echo "📋 Analysis Categories:"
+        echo "  - 🔒 Security Issues: ${{ steps.analyze.outputs.security_issues }}"
+        echo "  - ⚡ Performance Issues: ${{ steps.analyze.outputs.performance_issues }}"
+        echo "  - 🏗️ Design Pattern Issues: ${{ steps.analyze.outputs.design_pattern_issues }}"
+        echo "  - 🔄 Versioning Issues: ${{ steps.analyze.outputs.versioning_issues }}"
+        echo "  - 📝 Documentation Issues: ${{ steps.analyze.outputs.documentation_issues }}"
+        echo "  - 🛡️ Compliance Issues: ${{ steps.analyze.outputs.compliance_issues }}"
+        echo "  - 🧪 Testing Recommendations: ${{ steps.analyze.outputs.testing_recommendations }}"
+        echo "  - 📈 Monitoring Recommendations: ${{ steps.analyze.outputs.monitoring_recommendations }}"
+        echo "  - 🔧 Code Generation Opportunities: ${{ steps.analyze.outputs.code_generation_opportunities }}"
+        echo "  - 🏛️ Governance Issues: ${{ steps.analyze.outputs.governance_issues }}"
         
     - name: Comment on PR
       if: github.event_name == 'pull_request'
@@ -50,18 +67,42 @@ jobs:
       with:
         script: |
           const analysis = JSON.parse('${{ steps.analyze.outputs.analysis }}');
+          const categories = analysis.analysis_categories || {};
+          const analytics = analysis.analytics || {};
+          
           const comment = `## 🔍 OpenAPI Analysis Results
           
           **Valid**: ${analysis.is_valid ? '✅' : '❌'}
-          **Suggestions**: ${analysis.suggestions ? analysis.suggestions.length : 0}
-          **Operations**: ${analysis.summary ? analysis.summary.operations_count : 0}
-          **Paths**: ${analysis.summary ? analysis.summary.paths_count : 0}
-          **Schemas**: ${analysis.summary ? analysis.summary.schemas_count : 0}
+          **Total Suggestions**: ${analysis.suggestions ? analysis.suggestions.length : 0}
+          
+          ### 📊 Basic Metrics
+          - **Operations**: ${analysis.summary ? analysis.summary.operations_count : 0}
+          - **Paths**: ${analysis.summary ? analysis.summary.paths_count : 0}
+          - **Schemas**: ${analysis.summary ? analysis.summary.schemas_count : 0}
+          
+          ### 🎯 Advanced Analytics
+          - **Complexity Score**: ${analytics.complexity_score || 0}
+          - **Maintainability Score**: ${analytics.maintainability_score || 0}/100
+          
+          ### 📋 Analysis Categories
+          - 🔒 **Security Issues**: ${categories.security || 0}
+          - ⚡ **Performance Issues**: ${categories.performance || 0}
+          - 🏗️ **Design Pattern Issues**: ${categories.design_patterns || 0}
+          - 🔄 **Versioning Issues**: ${categories.versioning || 0}
+          - 📝 **Documentation Issues**: ${categories.documentation || 0}
+          - 🛡️ **Compliance Issues**: ${categories.compliance || 0}
+          - 🧪 **Testing Recommendations**: ${categories.testing || 0}
+          - 📈 **Monitoring Recommendations**: ${categories.monitoring || 0}
+          - 🔧 **Code Generation Opportunities**: ${categories.code_generation || 0}
+          - 🏛️ **Governance Issues**: ${categories.governance || 0}
           
           ${analysis.suggestions && analysis.suggestions.length > 0 ? 
-            `### 📋 Top Suggestions:\n\n${analysis.suggestions.slice(0, 5).map(s => `- ${s}`).join('\n')}` : 
+            `### 📋 Top Suggestions:\n\n${analysis.suggestions.slice(0, 10).map(s => `- ${s}`).join('\n')}` : 
             '### ✅ No suggestions found! Your OpenAPI specification looks great! 🎉'
-          }`;
+          }
+          
+          ---
+          *Powered by ApyGuard OpenAPI Analyzer with comprehensive best practices analysis*`;
             
           github.rest.issues.createComment({
             issue_number: context.issue.number,

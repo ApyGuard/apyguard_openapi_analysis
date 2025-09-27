@@ -34,6 +34,30 @@ outputs:
     description: "Number of paths in the spec"
   schemas_count:
     description: "Number of schemas in the spec"
+  complexity_score:
+    description: "API complexity score (0-1000+)"
+  maintainability_score:
+    description: "API maintainability score (0-100)"
+  security_issues:
+    description: "Number of security-related suggestions"
+  performance_issues:
+    description: "Number of performance-related suggestions"
+  design_pattern_issues:
+    description: "Number of design pattern suggestions"
+  versioning_issues:
+    description: "Number of versioning-related suggestions"
+  documentation_issues:
+    description: "Number of documentation quality suggestions"
+  compliance_issues:
+    description: "Number of compliance-related suggestions"
+  testing_recommendations:
+    description: "Number of testing strategy suggestions"
+  monitoring_recommendations:
+    description: "Number of monitoring/observability suggestions"
+  code_generation_opportunities:
+    description: "Number of code generation suggestions"
+  governance_issues:
+    description: "Number of API governance suggestions"
   repository_name:
     description: "Repository name (when analyzing repositories)"
   repository_full_name:

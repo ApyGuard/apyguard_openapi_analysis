@@ -4,8 +4,13 @@ import sys
 import requests
 import yaml
 import argparse
-from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import urljoin
+import re
+import hashlib
+import math
+from typing import Any, Dict, List, Optional, Tuple, Set
+from urllib.parse import urljoin, urlparse
+from datetime import datetime, timedelta
+from collections import defaultdict, Counter
 
 # --- Repository Information ---
 
@@ -340,6 +345,24 @@ def set_github_outputs(result: dict):
     _set("paths_count", str(summary.get("paths_count", 0)))
     _set("schemas_count", str(summary.get("schemas_count", 0)))
 
+    # Advanced analytics outputs
+    analytics = result.get("analytics", {})
+    _set("complexity_score", str(analytics.get("complexity_score", 0)))
+    _set("maintainability_score", str(analytics.get("maintainability_score", 0)))
+
+    # Analysis categories
+    categories = result.get("analysis_categories", {})
+    _set("security_issues", str(categories.get("security", 0)))
+    _set("performance_issues", str(categories.get("performance", 0)))
+    _set("design_pattern_issues", str(categories.get("design_patterns", 0)))
+    _set("versioning_issues", str(categories.get("versioning", 0)))
+    _set("documentation_issues", str(categories.get("documentation", 0)))
+    _set("compliance_issues", str(categories.get("compliance", 0)))
+    _set("testing_recommendations", str(categories.get("testing", 0)))
+    _set("monitoring_recommendations", str(categories.get("monitoring", 0)))
+    _set("code_generation_opportunities", str(categories.get("code_generation", 0)))
+    _set("governance_issues", str(categories.get("governance", 0)))
+
     _set("user_actor", os.getenv("GITHUB_ACTOR", ""))
     _set("user_repository", os.getenv("GITHUB_REPOSITORY", ""))
     _set("user_workflow", os.getenv("GITHUB_WORKFLOW", ""))
@@ -376,10 +399,1019 @@ def send_to_server(result: dict):
     except Exception as e:
         print(f"Failed to send data to server: {e}")
 
+# --- Advanced Analysis Functions ---
+
+def analyze_security_enhanced(spec: dict) -> List[str]:
+    """Enhanced security analysis with OWASP API Security Top 10 checks."""
+    suggestions = []
+    
+    # OWASP API Security Top 10 checks
+    security_schemes = spec.get("components", {}).get("securitySchemes", {})
+    global_security = spec.get("security", [])
+    
+    # API1:2019 - Broken Object Level Authorization
+    suggestions.extend(_check_broken_object_authorization(spec))
+    
+    # API2:2019 - Broken User Authentication
+    suggestions.extend(_check_broken_authentication(security_schemes, global_security))
+    
+    # API3:2019 - Excessive Data Exposure
+    suggestions.extend(_check_excessive_data_exposure(spec))
+    
+    # API4:2019 - Lack of Resources & Rate Limiting
+    suggestions.extend(_check_rate_limiting(spec))
+    
+    # API5:2019 - Broken Function Level Authorization
+    suggestions.extend(_check_function_level_authorization(spec))
+    
+    # API6:2019 - Mass Assignment
+    suggestions.extend(_check_mass_assignment(spec))
+    
+    # API7:2019 - Security Misconfiguration
+    suggestions.extend(_check_security_misconfiguration(spec))
+    
+    # API8:2019 - Injection
+    suggestions.extend(_check_injection_vulnerabilities(spec))
+    
+    # API9:2019 - Improper Assets Management
+    suggestions.extend(_check_asset_management(spec))
+    
+    # API10:2019 - Insufficient Logging & Monitoring
+    suggestions.extend(_check_logging_monitoring(spec))
+    
+    return suggestions
+
+def _check_broken_object_authorization(spec: dict) -> List[str]:
+    """Check for broken object level authorization."""
+    suggestions = []
+    paths = spec.get("paths", {})
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            # Check for ID-based endpoints without proper authorization
+            if "{" in path and "id" in path.lower():
+                if not details.get("security"):
+                    suggestions.append(f"ID-based endpoint {method.upper()} {path} should have explicit security requirements to prevent unauthorized access to other users' data.")
+    
+    return suggestions
+
+def _check_broken_authentication(security_schemes: dict, global_security: list) -> List[str]:
+    """Check for broken authentication mechanisms."""
+    suggestions = []
+    
+    if not security_schemes:
+        suggestions.append("No security schemes defined. Implement proper authentication mechanisms.")
+        return suggestions
+    
+    for scheme_name, scheme in security_schemes.items():
+        if not isinstance(scheme, dict):
+            continue
+            
+        scheme_type = scheme.get("type")
+        
+        if scheme_type == "http":
+            scheme_name_val = scheme.get("scheme")
+            if scheme_name_val == "bearer":
+                if "bearerFormat" not in scheme:
+                    suggestions.append(f"Bearer token scheme '{scheme_name}' should specify bearerFormat (e.g., 'JWT').")
+            elif scheme_name_val == "basic":
+                suggestions.append(f"Basic authentication '{scheme_name}' is insecure. Consider using OAuth2 or API keys.")
+        
+        elif scheme_type == "apiKey":
+            if scheme.get("in") == "query":
+                suggestions.append(f"API key '{scheme_name}' in query parameter is insecure. Use header or cookie instead.")
+        
+        elif scheme_type == "oauth2":
+            flows = scheme.get("flows", {})
+            if not flows:
+                suggestions.append(f"OAuth2 scheme '{scheme_name}' missing flows configuration.")
+            else:
+                for flow_name, flow_config in flows.items():
+                    if not flow_config.get("authorizationUrl") and flow_name in ["implicit", "authorizationCode"]:
+                        suggestions.append(f"OAuth2 {flow_name} flow in '{scheme_name}' missing authorizationUrl.")
+                    if not flow_config.get("tokenUrl"):
+                        suggestions.append(f"OAuth2 {flow_name} flow in '{scheme_name}' missing tokenUrl.")
+    
+    if not global_security:
+        suggestions.append("No global security requirements defined. Consider adding default authentication.")
+    
+    return suggestions
+
+def _check_excessive_data_exposure(spec: dict) -> List[str]:
+    """Check for excessive data exposure in responses."""
+    suggestions = []
+    paths = spec.get("paths", {})
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            responses = details.get("responses", {})
+            for code, response in responses.items():
+                if not isinstance(response, dict):
+                    continue
+                
+                content = response.get("content", {})
+                for content_type, content_spec in content.items():
+                    if not isinstance(content_spec, dict):
+                        continue
+                    
+                    schema = content_spec.get("schema")
+                    if schema and isinstance(schema, dict):
+                        # Check for sensitive fields
+                        sensitive_fields = _find_sensitive_fields(schema)
+                        if sensitive_fields:
+                            suggestions.append(f"Response {code} in {method.upper()} {path} may expose sensitive fields: {', '.join(sensitive_fields)}. Consider filtering or using separate schemas.")
+    
+    return suggestions
+
+def _find_sensitive_fields(schema: dict, path: str = "") -> List[str]:
+    """Recursively find potentially sensitive fields in schema."""
+    sensitive_patterns = [
+        r'password', r'secret', r'key', r'token', r'auth', r'credential',
+        r'ssn', r'social', r'credit', r'card', r'bank', r'account',
+        r'email', r'phone', r'address', r'personal', r'private'
+    ]
+    
+    sensitive_fields = []
+    
+    if isinstance(schema, dict):
+        properties = schema.get("properties", {})
+        for prop_name, prop_schema in properties.items():
+            current_path = f"{path}.{prop_name}" if path else prop_name
+            
+            # Check if field name matches sensitive patterns
+            for pattern in sensitive_patterns:
+                if re.search(pattern, prop_name, re.IGNORECASE):
+                    sensitive_fields.append(current_path)
+            
+            # Recursively check nested objects
+            if isinstance(prop_schema, dict):
+                sensitive_fields.extend(_find_sensitive_fields(prop_schema, current_path))
+    
+    return sensitive_fields
+
+def _check_rate_limiting(spec: dict) -> List[str]:
+    """Check for rate limiting implementation."""
+    suggestions = []
+    paths = spec.get("paths", {})
+    
+    has_rate_limiting = False
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            responses = details.get("responses", {})
+            for code, response in responses.items():
+                if not isinstance(response, dict):
+                    continue
+                
+                headers = response.get("headers", {})
+                for header_name in headers.keys():
+                    if any(keyword in header_name.lower() for keyword in ["rate", "limit", "quota", "throttle"]):
+                        has_rate_limiting = True
+                        break
+    
+    if not has_rate_limiting:
+        suggestions.append("No rate limiting headers found. Implement rate limiting to prevent abuse and ensure fair usage.")
+    
+    return suggestions
+
+def _check_function_level_authorization(spec: dict) -> List[str]:
+    """Check for function level authorization."""
+    suggestions = []
+    paths = spec.get("paths", {})
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            # Check for admin/privileged operations
+            admin_keywords = ["admin", "delete", "update", "create", "manage", "config"]
+            if any(keyword in path.lower() or keyword in method.lower() for keyword in admin_keywords):
+                if not details.get("security"):
+                    suggestions.append(f"Privileged operation {method.upper()} {path} should have explicit security requirements.")
+    
+    return suggestions
+
+def _check_mass_assignment(spec: dict) -> List[str]:
+    """Check for mass assignment vulnerabilities."""
+    suggestions = []
+    paths = spec.get("paths", {})
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            if method.lower() in ["post", "put", "patch"]:
+                request_body = details.get("requestBody", {})
+                if isinstance(request_body, dict):
+                    content = request_body.get("content", {})
+                    for content_type, content_spec in content.items():
+                        if isinstance(content_spec, dict):
+                            schema = content_spec.get("schema")
+                            if schema and isinstance(schema, dict):
+                                # Check for overly permissive schemas
+                                if not schema.get("additionalProperties", True) is False:
+                                    suggestions.append(f"Request body for {method.upper()} {path} allows additional properties. Consider restricting to prevent mass assignment attacks.")
+    
+    return suggestions
+
+def _check_security_misconfiguration(spec: dict) -> List[str]:
+    """Check for security misconfigurations."""
+    suggestions = []
+    
+    # Check for HTTP instead of HTTPS
+    servers = spec.get("servers", [])
+    for server in servers:
+        if isinstance(server, dict):
+            url = server.get("url", "")
+            if url.startswith("http://") and not url.startswith("http://localhost"):
+                suggestions.append(f"Server URL '{url}' uses HTTP instead of HTTPS. This is insecure for production APIs.")
+    
+    # Check for overly permissive CORS
+    if "x-cors" in spec:
+        cors_config = spec["x-cors"]
+        if isinstance(cors_config, dict):
+            if cors_config.get("allowOrigin") == "*":
+                suggestions.append("CORS configuration allows all origins (*). Consider restricting to specific domains.")
+    
+    return suggestions
+
+def _check_injection_vulnerabilities(spec: dict) -> List[str]:
+    """Check for potential injection vulnerabilities."""
+    suggestions = []
+    paths = spec.get("paths", {})
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            parameters = details.get("parameters", [])
+            for param in parameters:
+                if not isinstance(param, dict):
+                    continue
+                
+                param_name = param.get("name", "")
+                param_type = param.get("schema", {}).get("type", "")
+                
+                # Check for SQL injection patterns
+                if any(keyword in param_name.lower() for keyword in ["query", "sql", "search", "filter"]):
+                    if param_type == "string":
+                        suggestions.append(f"Parameter '{param_name}' in {method.upper()} {path} appears to accept SQL-like queries. Ensure proper input validation and parameterized queries.")
+    
+    return suggestions
+
+def _check_asset_management(spec: dict) -> List[str]:
+    """Check for improper asset management."""
+    suggestions = []
+    
+    # Check for version information
+    info = spec.get("info", {})
+    version = info.get("version")
+    if not version:
+        suggestions.append("API version not specified. Proper versioning is crucial for asset management.")
+    
+    # Check for deprecated operations
+    paths = spec.get("paths", {})
+    deprecated_ops = []
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            if details.get("deprecated"):
+                deprecated_ops.append(f"{method.upper()} {path}")
+    
+    if deprecated_ops:
+        suggestions.append(f"Deprecated operations found: {', '.join(deprecated_ops)}. Ensure proper deprecation timeline and migration path.")
+    
+    return suggestions
+
+def _check_logging_monitoring(spec: dict) -> List[str]:
+    """Check for logging and monitoring capabilities."""
+    suggestions = []
+    
+    # Check for health check endpoints
+    paths = spec.get("paths", {})
+    has_health_check = False
+    
+    for path in paths.keys():
+        if any(keyword in path.lower() for keyword in ["health", "status", "ping", "ready", "live"]):
+            has_health_check = True
+            break
+    
+    if not has_health_check:
+        suggestions.append("No health check endpoint found. Add /health or /status endpoint for monitoring.")
+    
+    # Check for proper error responses
+    has_proper_errors = False
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            responses = details.get("responses", {})
+            if "500" in responses or "4xx" in responses:
+                has_proper_errors = True
+                break
+    
+    if not has_proper_errors:
+        suggestions.append("Missing proper error response definitions. Add 4xx and 5xx error responses for better monitoring.")
+    
+    return suggestions
+
+def analyze_performance(spec: dict) -> List[str]:
+    """Analyze API performance characteristics."""
+    suggestions = []
+    paths = spec.get("paths", {})
+    
+    # Analyze response complexity
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            # Check for large response schemas
+            responses = details.get("responses", {})
+            for code, response in responses.items():
+                if not isinstance(response, dict):
+                    continue
+                
+                content = response.get("content", {})
+                for content_type, content_spec in content.items():
+                    if isinstance(content_spec, dict):
+                        schema = content_spec.get("schema")
+                        if schema:
+                            complexity = _calculate_schema_complexity(schema)
+                            if complexity > 50:  # Threshold for complex schemas
+                                suggestions.append(f"Response {code} in {method.upper()} {path} has high complexity ({complexity}). Consider pagination or field selection.")
+            
+            # Check for missing caching headers
+            if method.lower() == "get":
+                has_cache_headers = False
+                for code, response in responses.items():
+                    if isinstance(response, dict):
+                        headers = response.get("headers", {})
+                        for header_name in headers.keys():
+                            if any(keyword in header_name.lower() for keyword in ["cache", "etag", "last-modified"]):
+                                has_cache_headers = True
+                                break
+                
+                if not has_cache_headers:
+                    suggestions.append(f"GET operation {path} should include caching headers (Cache-Control, ETag, Last-Modified) for better performance.")
+    
+    return suggestions
+
+def _calculate_schema_complexity(schema: dict, depth: int = 0) -> int:
+    """Calculate schema complexity score."""
+    if depth > 10:  # Prevent infinite recursion
+        return 0
+    
+    if not isinstance(schema, dict):
+        return 1
+    
+    complexity = 1
+    
+    # Count properties
+    properties = schema.get("properties", {})
+    if isinstance(properties, dict):
+        complexity += len(properties)
+        for prop_schema in properties.values():
+            if isinstance(prop_schema, dict):
+                complexity += _calculate_schema_complexity(prop_schema, depth + 1)
+    
+    # Count array items
+    items = schema.get("items")
+    if isinstance(items, dict):
+        complexity += _calculate_schema_complexity(items, depth + 1)
+    
+    # Count composition schemas
+    for comp_type in ["allOf", "oneOf", "anyOf"]:
+        comp_schemas = schema.get(comp_type, [])
+        if isinstance(comp_schemas, list):
+            for comp_schema in comp_schemas:
+                if isinstance(comp_schema, dict):
+                    complexity += _calculate_schema_complexity(comp_schema, depth + 1)
+    
+    return complexity
+
+def analyze_api_design_patterns(spec: dict) -> List[str]:
+    """Analyze API design patterns and RESTful compliance."""
+    suggestions = []
+    paths = spec.get("paths", {})
+    
+    # Check for RESTful patterns
+    resource_patterns = defaultdict(list)
+    
+    for path in paths.keys():
+        if not isinstance(path, str):
+            continue
+        
+        # Extract resource name from path
+        path_parts = [p for p in path.split("/") if p and not p.startswith("{")]
+        if path_parts:
+            resource = path_parts[0]
+            resource_patterns[resource].append(path)
+    
+    # Check for CRUD completeness
+    for resource, resource_paths in resource_patterns.items():
+        methods_found = set()
+        
+        for path in resource_paths:
+            methods = paths.get(path, {})
+            if isinstance(methods, dict):
+                methods_found.update(methods.keys())
+        
+        # Check for standard CRUD operations
+        expected_operations = {
+            "get": f"GET /{resource} (list)",
+            "post": f"POST /{resource} (create)",
+            "get_id": f"GET /{resource}/{{id}} (read)",
+            "put": f"PUT /{resource}/{{id}} (update)",
+            "delete": f"DELETE /{resource}/{{id}} (delete)"
+        }
+        
+        for op_type, description in expected_operations.items():
+            if op_type == "get_id":
+                has_get_by_id = any(f"/{resource}/{{" in path for path in resource_paths)
+                if not has_get_by_id:
+                    suggestions.append(f"Missing {description} for resource '{resource}'.")
+            elif op_type not in methods_found:
+                if op_type == "get" and f"/{resource}" in resource_paths:
+                    continue  # List endpoint exists
+                suggestions.append(f"Missing {description} for resource '{resource}'.")
+    
+    # Check for consistent naming
+    naming_issues = _check_naming_consistency(paths)
+    suggestions.extend(naming_issues)
+    
+    # Check for proper HTTP methods
+    method_issues = _check_http_method_usage(paths)
+    suggestions.extend(method_issues)
+    
+    return suggestions
+
+def _check_naming_consistency(paths: dict) -> List[str]:
+    """Check for consistent naming conventions."""
+    suggestions = []
+    
+    # Check for consistent path naming
+    path_styles = set()
+    for path in paths.keys():
+        if not isinstance(path, str):
+            continue
+        
+        if "-" in path:
+            path_styles.add("kebab-case")
+        elif "_" in path:
+            path_styles.add("snake_case")
+        elif any(c.isupper() for c in path):
+            path_styles.add("camelCase")
+        else:
+            path_styles.add("lowercase")
+    
+    if len(path_styles) > 1:
+        suggestions.append(f"Inconsistent path naming styles detected: {', '.join(path_styles)}. Choose one style and apply consistently.")
+    
+    return suggestions
+
+def _check_http_method_usage(paths: dict) -> List[str]:
+    """Check for proper HTTP method usage."""
+    suggestions = []
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            method_lower = method.lower()
+            
+            # Check for inappropriate method usage
+            if method_lower == "get" and details.get("requestBody"):
+                suggestions.append(f"GET operation {path} should not have a request body.")
+            
+            if method_lower == "delete" and details.get("requestBody"):
+                suggestions.append(f"DELETE operation {path} typically should not have a request body.")
+            
+            # Check for idempotent operations
+            if method_lower in ["put", "delete"]:
+                description = details.get("description", "").lower()
+                if "idempotent" not in description:
+                    suggestions.append(f"{method.upper()} operation {path} should document idempotent behavior.")
+    
+    return suggestions
+
+def analyze_versioning(spec: dict) -> List[str]:
+    """Analyze API versioning strategy."""
+    suggestions = []
+    
+    # Check version in info
+    info = spec.get("info", {})
+    version = info.get("version")
+    if not version:
+        suggestions.append("API version not specified in info.version.")
+    else:
+        # Check version format
+        if not re.match(r'^\d+\.\d+(\.\d+)?(-[a-zA-Z0-9]+)?$', version):
+            suggestions.append(f"Version '{version}' should follow semantic versioning (e.g., '1.0.0', '2.1.0-beta').")
+    
+    # Check for version in URL
+    servers = spec.get("servers", [])
+    has_version_in_url = False
+    
+    for server in servers:
+        if isinstance(server, dict):
+            url = server.get("url", "")
+            if "/v" in url or "/version" in url:
+                has_version_in_url = True
+                break
+    
+    if not has_version_in_url:
+        suggestions.append("Consider including version in server URLs (e.g., 'https://api.example.com/v1').")
+    
+    # Check for deprecated operations
+    paths = spec.get("paths", {})
+    deprecated_count = 0
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            if details.get("deprecated"):
+                deprecated_count += 1
+    
+    if deprecated_count > 0:
+        suggestions.append(f"Found {deprecated_count} deprecated operations. Ensure proper deprecation timeline and migration documentation.")
+    
+    return suggestions
+
+def analyze_documentation_quality(spec: dict) -> List[str]:
+    """Analyze documentation quality and completeness."""
+    suggestions = []
+    
+    # Check info section
+    info = spec.get("info", {})
+    if not info.get("title"):
+        suggestions.append("API title is missing. Add a clear, descriptive title.")
+    
+    if not info.get("description"):
+        suggestions.append("API description is missing. Add a comprehensive description of the API's purpose and functionality.")
+    
+    if not info.get("version"):
+        suggestions.append("API version is missing. Specify the current version.")
+    
+    # Check for contact information
+    if not info.get("contact"):
+        suggestions.append("Contact information is missing. Add contact details for API support.")
+    
+    if not info.get("license"):
+        suggestions.append("License information is missing. Specify the API license.")
+    
+    # Check operation documentation
+    paths = spec.get("paths", {})
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            # Check operation documentation
+            if not details.get("summary"):
+                suggestions.append(f"Operation {method.upper()} {path} missing summary.")
+            
+            if not details.get("description"):
+                suggestions.append(f"Operation {method.upper()} {path} missing description.")
+            
+            # Check for examples
+            if not details.get("examples") and not details.get("example"):
+                suggestions.append(f"Operation {method.upper()} {path} missing examples.")
+            
+            # Check parameter documentation
+            parameters = details.get("parameters", [])
+            for param in parameters:
+                if not isinstance(param, dict):
+                    continue
+                
+                if not param.get("description"):
+                    suggestions.append(f"Parameter {param.get('name', 'unknown')} in {method.upper()} {path} missing description.")
+                
+                if not param.get("example") and not param.get("examples"):
+                    suggestions.append(f"Parameter {param.get('name', 'unknown')} in {method.upper()} {path} missing example.")
+    
+    return suggestions
+
+def analyze_compliance(spec: dict) -> List[str]:
+    """Analyze compliance with various standards and regulations."""
+    suggestions = []
+    
+    # GDPR compliance checks
+    gdpr_issues = _check_gdpr_compliance(spec)
+    suggestions.extend(gdpr_issues)
+    
+    # Accessibility checks
+    accessibility_issues = _check_accessibility(spec)
+    suggestions.extend(accessibility_issues)
+    
+    # Industry-specific compliance
+    industry_issues = _check_industry_compliance(spec)
+    suggestions.extend(industry_issues)
+    
+    return suggestions
+
+def _check_gdpr_compliance(spec: dict) -> List[str]:
+    """Check GDPR compliance."""
+    suggestions = []
+    
+    # Check for personal data handling
+    paths = spec.get("paths", {})
+    personal_data_endpoints = []
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            # Check for personal data keywords
+            personal_keywords = ["user", "profile", "account", "personal", "email", "phone", "address"]
+            if any(keyword in path.lower() for keyword in personal_keywords):
+                personal_data_endpoints.append(f"{method.upper()} {path}")
+    
+    if personal_data_endpoints:
+        suggestions.append(f"Endpoints handling personal data found: {', '.join(personal_data_endpoints)}. Ensure GDPR compliance for data processing, consent, and data subject rights.")
+    
+    return suggestions
+
+def _check_accessibility(spec: dict) -> List[str]:
+    """Check accessibility compliance."""
+    suggestions = []
+    
+    # Check for error message accessibility
+    paths = spec.get("paths", {})
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            responses = details.get("responses", {})
+            for code, response in responses.items():
+                if not isinstance(response, dict):
+                    continue
+                
+                if code.startswith("4") or code.startswith("5"):
+                    description = response.get("description", "")
+                    if not description or len(description) < 10:
+                        suggestions.append(f"Error response {code} in {method.upper()} {path} should have clear, accessible error descriptions.")
+    
+    return suggestions
+
+def _check_industry_compliance(spec: dict) -> List[str]:
+    """Check industry-specific compliance."""
+    suggestions = []
+    
+    # Check for healthcare-related endpoints (HIPAA)
+    paths = spec.get("paths", {})
+    healthcare_keywords = ["patient", "medical", "health", "diagnosis", "treatment", "pharmacy"]
+    
+    has_healthcare_data = False
+    for path in paths.keys():
+        if any(keyword in path.lower() for keyword in healthcare_keywords):
+            has_healthcare_data = True
+            break
+    
+    if has_healthcare_data:
+        suggestions.append("Healthcare-related endpoints detected. Ensure HIPAA compliance for protected health information (PHI).")
+    
+    # Check for payment-related endpoints (PCI-DSS)
+    payment_keywords = ["payment", "card", "billing", "invoice", "transaction", "charge"]
+    
+    has_payment_data = False
+    for path in paths.keys():
+        if any(keyword in path.lower() for keyword in payment_keywords):
+            has_payment_data = True
+            break
+    
+    if has_payment_data:
+        suggestions.append("Payment-related endpoints detected. Ensure PCI-DSS compliance for payment card data.")
+    
+    return suggestions
+
+def analyze_testing_recommendations(spec: dict) -> List[str]:
+    """Generate testing strategy recommendations."""
+    suggestions = []
+    
+    paths = spec.get("paths", {})
+    operations_count = 0
+    test_scenarios = []
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            operations_count += 1
+            
+            # Generate test scenarios
+            test_scenarios.append(f"Test {method.upper()} {path} with valid data")
+            test_scenarios.append(f"Test {method.upper()} {path} with invalid data")
+            test_scenarios.append(f"Test {method.upper()} {path} with missing required fields")
+            
+            # Check for authentication requirements
+            if details.get("security"):
+                test_scenarios.append(f"Test {method.upper()} {path} with invalid authentication")
+                test_scenarios.append(f"Test {method.upper()} {path} with expired tokens")
+    
+    if test_scenarios:
+        suggestions.append(f"Recommended test scenarios ({len(test_scenarios)} total): {', '.join(test_scenarios[:5])}{'...' if len(test_scenarios) > 5 else ''}")
+    
+    # Mock data recommendations
+    suggestions.append("Generate mock data for all request/response schemas to enable comprehensive testing.")
+    
+    # Contract testing
+    suggestions.append("Implement contract testing to ensure API compatibility across versions.")
+    
+    # Load testing
+    suggestions.append("Perform load testing to validate performance under expected traffic.")
+    
+    return suggestions
+
+def analyze_monitoring_observability(spec: dict) -> List[str]:
+    """Analyze monitoring and observability requirements."""
+    suggestions = []
+    
+    # Check for health check endpoints
+    paths = spec.get("paths", {})
+    has_health_check = False
+    
+    for path in paths.keys():
+        if any(keyword in path.lower() for keyword in ["health", "status", "ping", "ready", "live"]):
+            has_health_check = True
+            break
+    
+    if not has_health_check:
+        suggestions.append("Add health check endpoint (e.g., /health, /status) for monitoring system health.")
+    
+    # Check for metrics endpoints
+    has_metrics = any("metrics" in path.lower() for path in paths.keys())
+    if not has_metrics:
+        suggestions.append("Consider adding metrics endpoint (e.g., /metrics) for Prometheus-style monitoring.")
+    
+    # Check for proper error responses
+    has_error_responses = False
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            responses = details.get("responses", {})
+            if "500" in responses or any(code.startswith("4") for code in responses.keys()):
+                has_error_responses = True
+                break
+    
+    if not has_error_responses:
+        suggestions.append("Add proper error response definitions (4xx, 5xx) for better error tracking and monitoring.")
+    
+    # Logging recommendations
+    suggestions.append("Implement structured logging with correlation IDs for request tracing.")
+    suggestions.append("Add performance metrics collection (response times, throughput, error rates).")
+    suggestions.append("Set up alerting for error rates, response times, and system health.")
+    
+    return suggestions
+
+def analyze_code_generation(spec: dict) -> List[str]:
+    """Analyze code generation opportunities."""
+    suggestions = []
+    
+    # Check for client SDK generation
+    suggestions.append("Generate client SDKs for popular languages (JavaScript, Python, Java, C#).")
+    
+    # Check for server stub generation
+    suggestions.append("Generate server stubs for common frameworks (Express.js, Flask, Spring Boot).")
+    
+    # TypeScript types
+    suggestions.append("Generate TypeScript type definitions for better developer experience.")
+    
+    # Database models
+    schemas = spec.get("components", {}).get("schemas", {})
+    if schemas:
+        suggestions.append(f"Generate database models from {len(schemas)} schemas for ORM frameworks.")
+    
+    # API documentation
+    suggestions.append("Generate interactive API documentation (Swagger UI, ReDoc).")
+    
+    # Mock servers
+    suggestions.append("Generate mock server implementations for testing and development.")
+    
+    return suggestions
+
+def analyze_api_governance(spec: dict) -> List[str]:
+    """Analyze API governance and consistency."""
+    suggestions = []
+    
+    # Check naming consistency
+    paths = spec.get("paths", {})
+    path_styles = set()
+    method_consistency = defaultdict(list)
+    
+    for path, methods in paths.items():
+        if not isinstance(path, str):
+            continue
+        
+        # Check path naming style
+        if "-" in path:
+            path_styles.add("kebab-case")
+        elif "_" in path:
+            path_styles.add("snake_case")
+        elif any(c.isupper() for c in path):
+            path_styles.add("camelCase")
+        else:
+            path_styles.add("lowercase")
+        
+        # Check method consistency
+        if isinstance(methods, dict):
+            for method in methods.keys():
+                method_consistency[method].append(path)
+    
+    if len(path_styles) > 1:
+        suggestions.append(f"Inconsistent path naming styles: {', '.join(path_styles)}. Standardize on one style.")
+    
+    # Check for operation ID consistency
+    operation_ids = []
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            op_id = details.get("operationId")
+            if op_id:
+                operation_ids.append(op_id)
+    
+    if len(set(operation_ids)) != len(operation_ids):
+        suggestions.append("Duplicate operation IDs found. Ensure all operation IDs are unique.")
+    
+    # Check for consistent response patterns
+    response_patterns = defaultdict(list)
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            
+            responses = details.get("responses", {})
+            for code in responses.keys():
+                response_patterns[code].append(f"{method.upper()} {path}")
+    
+    # Check for consistent error handling
+    common_error_codes = ["400", "401", "403", "404", "500"]
+    for code in common_error_codes:
+        if code not in response_patterns:
+            suggestions.append(f"Consider adding consistent {code} error responses across all operations.")
+    
+    return suggestions
+
+def analyze_advanced_analytics(spec: dict) -> Dict[str, Any]:
+    """Perform advanced analytics and generate insights."""
+    analytics = {
+        "complexity_score": 0,
+        "maintainability_score": 0,
+        "technical_debt": [],
+        "refactoring_recommendations": [],
+        "architecture_insights": []
+    }
+    
+    paths = spec.get("paths", {})
+    schemas = spec.get("components", {}).get("schemas", {})
+    
+    # Calculate complexity score
+    total_operations = 0
+    total_paths = len(paths)
+    total_schemas = len(schemas)
+    
+    for path, methods in paths.items():
+        if isinstance(methods, dict):
+            total_operations += len(methods)
+    
+    # Complexity factors
+    complexity_factors = {
+        "operations": total_operations * 2,
+        "paths": total_paths * 1,
+        "schemas": total_schemas * 3,
+        "nested_schemas": _count_nested_schemas(schemas) * 2
+    }
+    
+    analytics["complexity_score"] = sum(complexity_factors.values())
+    
+    # Calculate maintainability score (inverse of complexity)
+    max_complexity = 1000  # Arbitrary max
+    analytics["maintainability_score"] = max(0, 100 - (analytics["complexity_score"] / max_complexity * 100))
+    
+    # Identify technical debt
+    if analytics["complexity_score"] > 500:
+        analytics["technical_debt"].append("High complexity detected. Consider breaking down into smaller, focused APIs.")
+    
+    if total_operations > 50:
+        analytics["technical_debt"].append("Large number of operations. Consider API versioning and modularization.")
+    
+    # Refactoring recommendations
+    if analytics["maintainability_score"] < 50:
+        analytics["refactoring_recommendations"].append("Low maintainability score. Focus on reducing complexity and improving documentation.")
+    
+    # Architecture insights
+    if total_schemas > 20:
+        analytics["architecture_insights"].append("Large schema count suggests complex domain model. Consider domain-driven design principles.")
+    
+    return analytics
+
+def _count_nested_schemas(schemas: dict) -> int:
+    """Count nested schema references."""
+    count = 0
+    for schema in schemas.values():
+        if isinstance(schema, dict):
+            count += _count_refs_in_schema(schema)
+    return count
+
+def _count_refs_in_schema(schema: dict) -> int:
+    """Recursively count $ref references in schema."""
+    count = 0
+    if isinstance(schema, dict):
+        if "$ref" in schema:
+            count += 1
+        for value in schema.values():
+            if isinstance(value, dict):
+                count += _count_refs_in_schema(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        count += _count_refs_in_schema(item)
+    return count
+
 # --- Analyzer Core ---
 
 def analyze_openapi_spec(spec: dict) -> Dict[str, Any]:
-    """Analyze an OpenAPI specification dictionary."""
+    """Analyze an OpenAPI specification dictionary with comprehensive best practices analysis."""
     suggestions: List[str] = []
     
     # Normalize v2 specs to v3-like structure for consistent checks
@@ -644,6 +1676,51 @@ def analyze_openapi_spec(spec: dict) -> Dict[str, Any]:
             if not has_cache_headers and method.lower() == "get":
                 suggestions.append(f"GET operation {path} should document caching headers.")
 
+    # === ADVANCED ANALYSIS FEATURES ===
+    
+    # Enhanced Security Analysis (OWASP API Security Top 10)
+    security_suggestions = analyze_security_enhanced(spec)
+    suggestions.extend(security_suggestions)
+    
+    # Performance Analysis
+    performance_suggestions = analyze_performance(spec)
+    suggestions.extend(performance_suggestions)
+    
+    # API Design Pattern Analysis
+    design_suggestions = analyze_api_design_patterns(spec)
+    suggestions.extend(design_suggestions)
+    
+    # Versioning Analysis
+    versioning_suggestions = analyze_versioning(spec)
+    suggestions.extend(versioning_suggestions)
+    
+    # Documentation Quality Analysis
+    doc_suggestions = analyze_documentation_quality(spec)
+    suggestions.extend(doc_suggestions)
+    
+    # Compliance Analysis
+    compliance_suggestions = analyze_compliance(spec)
+    suggestions.extend(compliance_suggestions)
+    
+    # Testing Recommendations
+    testing_suggestions = analyze_testing_recommendations(spec)
+    suggestions.extend(testing_suggestions)
+    
+    # Monitoring & Observability
+    monitoring_suggestions = analyze_monitoring_observability(spec)
+    suggestions.extend(monitoring_suggestions)
+    
+    # Code Generation Opportunities
+    codegen_suggestions = analyze_code_generation(spec)
+    suggestions.extend(codegen_suggestions)
+    
+    # API Governance
+    governance_suggestions = analyze_api_governance(spec)
+    suggestions.extend(governance_suggestions)
+    
+    # Advanced Analytics
+    analytics = analyze_advanced_analytics(spec)
+
     return {
         "status": "success",
         "is_valid": True,
@@ -654,6 +1731,19 @@ def analyze_openapi_spec(spec: dict) -> Dict[str, Any]:
             "schemas_count": len(schemas) if isinstance(schemas, dict) else 0,
         },
         "suggestions": suggestions,
+        "analytics": analytics,
+        "analysis_categories": {
+            "security": len([s for s in security_suggestions]),
+            "performance": len([s for s in performance_suggestions]),
+            "design_patterns": len([s for s in design_suggestions]),
+            "versioning": len([s for s in versioning_suggestions]),
+            "documentation": len([s for s in doc_suggestions]),
+            "compliance": len([s for s in compliance_suggestions]),
+            "testing": len([s for s in testing_suggestions]),
+            "monitoring": len([s for s in monitoring_suggestions]),
+            "code_generation": len([s for s in codegen_suggestions]),
+            "governance": len([s for s in governance_suggestions])
+        }
     }
 
 def analyze_openapi_url(url: str) -> Dict[str, Any]:
@@ -1053,6 +2143,24 @@ def main():
             set_output("operations_count", str(summary.get("operations_count", 0)))
             set_output("paths_count", str(summary.get("paths_count", 0)))
             set_output("schemas_count", str(summary.get("schemas_count", 0)))
+        
+        # Advanced analytics outputs
+        analytics = result.get("analytics", {})
+        set_output("complexity_score", str(analytics.get("complexity_score", 0)))
+        set_output("maintainability_score", str(analytics.get("maintainability_score", 0)))
+
+        # Analysis categories
+        categories = result.get("analysis_categories", {})
+        set_output("security_issues", str(categories.get("security", 0)))
+        set_output("performance_issues", str(categories.get("performance", 0)))
+        set_output("design_pattern_issues", str(categories.get("design_patterns", 0)))
+        set_output("versioning_issues", str(categories.get("versioning", 0)))
+        set_output("documentation_issues", str(categories.get("documentation", 0)))
+        set_output("compliance_issues", str(categories.get("compliance", 0)))
+        set_output("testing_recommendations", str(categories.get("testing", 0)))
+        set_output("monitoring_recommendations", str(categories.get("monitoring", 0)))
+        set_output("code_generation_opportunities", str(categories.get("code_generation", 0)))
+        set_output("governance_issues", str(categories.get("governance", 0)))
         
         if "repository" in result:
             repo_info = result["repository"]
