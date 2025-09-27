@@ -1,0 +1,898 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Complex Enterprise API",
+    "description": "A comprehensive enterprise API with various security, performance, and compliance issues for testing the OpenAPI Analyzer",
+    "version": "2.1.0-beta",
+    "contact": {
+      "name": "API Support Team",
+      "email": "support@enterprise.com",
+      "url": "https://enterprise.com/support"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://enterprise.com/license"
+    }
+  },
+  "host": "api.enterprise.com",
+  "basePath": "/v2",
+  "schemes": ["http", "https"],
+  "consumes": ["application/json", "application/xml"],
+  "produces": ["application/json", "application/xml"],
+  "paths": {
+    "/users": {
+      "get": {
+        "summary": "List all users",
+        "description": "Retrieve a paginated list of all users in the system",
+        "operationId": "getAllUsers",
+        "tags": ["users", "admin"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number for pagination",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "minimum": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Number of users per page",
+            "required": false,
+            "type": "integer",
+            "default": 20,
+            "minimum": 1,
+            "maximum": 100
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Search query for filtering users",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sort field",
+            "required": false,
+            "type": "string",
+            "enum": ["name", "email", "created_at"]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with user list",
+            "schema": {
+              "$ref": "#/definitions/UserListResponse"
+            },
+            "headers": {
+              "X-Total-Count": {
+                "description": "Total number of users",
+                "type": "integer"
+              },
+              "X-Rate-Limit": {
+                "description": "Rate limit remaining",
+                "type": "integer"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid parameters"
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing authentication"
+          },
+          "403": {
+            "description": "Forbidden - insufficient permissions"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create new user",
+        "description": "Create a new user account in the system",
+        "operationId": "createUser",
+        "tags": ["users", "admin"],
+        "parameters": [
+          {
+            "name": "user",
+            "in": "body",
+            "description": "User data for account creation",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserCreateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid user data"
+          },
+          "409": {
+            "description": "Conflict - user already exists"
+          },
+          "422": {
+            "description": "Validation error"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/users/{userId}": {
+      "get": {
+        "summary": "Get user by ID",
+        "description": "Retrieve a specific user by their unique identifier",
+        "operationId": "getUserById",
+        "tags": ["users"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "Unique user identifier",
+            "required": true,
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9-]+$"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User found successfully",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user",
+        "description": "Update an existing user's information",
+        "operationId": "updateUser",
+        "tags": ["users"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "Unique user identifier",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "user",
+            "in": "body",
+            "description": "Updated user information",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserUpdateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid user data"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete user",
+        "description": "Permanently delete a user account",
+        "operationId": "deleteUser",
+        "tags": ["users", "admin"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "Unique user identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "User deleted successfully"
+          },
+          "404": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/users/{userId}/profile": {
+      "get": {
+        "summary": "Get user profile",
+        "description": "Retrieve detailed user profile information",
+        "operationId": "getUserProfile",
+        "tags": ["users", "profile"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "Unique user identifier",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User profile retrieved successfully",
+            "schema": {
+              "$ref": "#/definitions/UserProfile"
+            }
+          },
+          "404": {
+            "description": "User profile not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/patients": {
+      "get": {
+        "summary": "List patients",
+        "description": "Retrieve a list of patients (HIPAA compliance required)",
+        "operationId": "getPatients",
+        "tags": ["patients", "healthcare"],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Page number",
+            "required": false,
+            "type": "integer"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Patient list retrieved",
+            "schema": {
+              "$ref": "#/definitions/PatientList"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/payments": {
+      "post": {
+        "summary": "Process payment",
+        "description": "Process a payment transaction (PCI-DSS compliance required)",
+        "operationId": "processPayment",
+        "tags": ["payments", "billing"],
+        "parameters": [
+          {
+            "name": "payment",
+            "in": "body",
+            "description": "Payment information",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PaymentRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment processed successfully",
+            "schema": {
+              "$ref": "#/definitions/PaymentResponse"
+            }
+          },
+          "400": {
+            "description": "Invalid payment data"
+          },
+          "500": {
+            "description": "Payment processing error"
+          }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "summary": "Admin: List all users",
+        "description": "Administrative endpoint to list all users",
+        "operationId": "adminGetAllUsers",
+        "tags": ["admin", "users"],
+        "responses": {
+          "200": {
+            "description": "All users retrieved",
+            "schema": {
+              "$ref": "#/definitions/UserListResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden - admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Check the health status of the API",
+        "operationId": "healthCheck",
+        "tags": ["monitoring"],
+        "responses": {
+          "200": {
+            "description": "API is healthy",
+            "schema": {
+              "$ref": "#/definitions/HealthStatus"
+            }
+          },
+          "503": {
+            "description": "API is unhealthy"
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "summary": "API metrics",
+        "description": "Get API performance metrics",
+        "operationId": "getMetrics",
+        "tags": ["monitoring"],
+        "responses": {
+          "200": {
+            "description": "Metrics retrieved",
+            "schema": {
+              "$ref": "#/definitions/Metrics"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "User": {
+      "type": "object",
+      "required": ["id", "name", "email", "created_at"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique user identifier",
+          "example": "user-123"
+        },
+        "name": {
+          "type": "string",
+          "description": "User's full name",
+          "minLength": 1,
+          "maxLength": 100,
+          "example": "John Doe"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User's email address",
+          "example": "john.doe@example.com"
+        },
+        "password": {
+          "type": "string",
+          "description": "User's password (sensitive field)",
+          "minLength": 8,
+          "maxLength": 128
+        },
+        "ssn": {
+          "type": "string",
+          "description": "Social Security Number (sensitive)",
+          "pattern": "^\\d{3}-\\d{2}-\\d{4}$"
+        },
+        "credit_card": {
+          "type": "string",
+          "description": "Credit card number (sensitive)",
+          "pattern": "^\\d{16}$"
+        },
+        "bank_account": {
+          "type": "string",
+          "description": "Bank account number (sensitive)"
+        },
+        "personal_address": {
+          "type": "string",
+          "description": "Personal address information"
+        },
+        "phone_number": {
+          "type": "string",
+          "description": "Phone number",
+          "pattern": "^\\+?[1-9]\\d{1,14}$"
+        },
+        "age": {
+          "type": "integer",
+          "description": "User's age",
+          "minimum": 0,
+          "maximum": 150
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Account creation timestamp"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update timestamp"
+        },
+        "last_login": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last login timestamp"
+        },
+        "is_active": {
+          "type": "boolean",
+          "description": "Whether the user account is active"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["user", "admin", "moderator"]
+          },
+          "description": "User roles and permissions"
+        }
+      }
+    },
+    "UserCreateRequest": {
+      "type": "object",
+      "required": ["name", "email", "password"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "User's full name",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User's email address"
+        },
+        "password": {
+          "type": "string",
+          "description": "User's password",
+          "minLength": 8,
+          "maxLength": 128
+        },
+        "age": {
+          "type": "integer",
+          "description": "User's age",
+          "minimum": 0,
+          "maximum": 150
+        },
+        "phone_number": {
+          "type": "string",
+          "description": "Phone number"
+        }
+      }
+    },
+    "UserUpdateRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "User's full name",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User's email address"
+        },
+        "age": {
+          "type": "integer",
+          "description": "User's age",
+          "minimum": 0,
+          "maximum": 150
+        },
+        "phone_number": {
+          "type": "string",
+          "description": "Phone number"
+        }
+      }
+    },
+    "UserListResponse": {
+      "type": "object",
+      "properties": {
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/User"
+          }
+        },
+        "pagination": {
+          "$ref": "#/definitions/Pagination"
+        }
+      }
+    },
+    "UserProfile": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/definitions/User"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "preferences": {
+              "$ref": "#/definitions/UserPreferences"
+            },
+            "activity": {
+              "$ref": "#/definitions/UserActivity"
+            }
+          }
+        }
+      ]
+    },
+    "UserPreferences": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string",
+          "default": "en",
+          "enum": ["en", "es", "fr", "de"]
+        },
+        "timezone": {
+          "type": "string",
+          "default": "UTC"
+        },
+        "notifications": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "UserActivity": {
+      "type": "object",
+      "properties": {
+        "last_login": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "login_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sessions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Session"
+          }
+        }
+      }
+    },
+    "Session": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ip_address": {
+          "type": "string",
+          "format": "ipv4"
+        }
+      }
+    },
+    "Patient": {
+      "type": "object",
+      "required": ["id", "name", "medical_record_number"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Patient identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Patient's full name"
+        },
+        "medical_record_number": {
+          "type": "string",
+          "description": "Medical record number (PHI)"
+        },
+        "date_of_birth": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of birth (PHI)"
+        },
+        "diagnosis": {
+          "type": "string",
+          "description": "Medical diagnosis (PHI)"
+        },
+        "treatment": {
+          "type": "string",
+          "description": "Treatment plan (PHI)"
+        },
+        "pharmacy": {
+          "type": "string",
+          "description": "Pharmacy information"
+        }
+      }
+    },
+    "PatientList": {
+      "type": "object",
+      "properties": {
+        "patients": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Patient"
+          }
+        }
+      }
+    },
+    "PaymentRequest": {
+      "type": "object",
+      "required": ["amount", "card_number", "cvv"],
+      "properties": {
+        "amount": {
+          "type": "number",
+          "description": "Payment amount",
+          "minimum": 0.01
+        },
+        "card_number": {
+          "type": "string",
+          "description": "Credit card number (PCI sensitive)",
+          "pattern": "^\\d{16}$"
+        },
+        "cvv": {
+          "type": "string",
+          "description": "Card verification value (PCI sensitive)",
+          "pattern": "^\\d{3,4}$"
+        },
+        "expiry_date": {
+          "type": "string",
+          "description": "Card expiry date",
+          "pattern": "^(0[1-9]|1[0-2])\\/(\\d{2})$"
+        },
+        "billing_address": {
+          "$ref": "#/definitions/Address"
+        }
+      }
+    },
+    "PaymentResponse": {
+      "type": "object",
+      "properties": {
+        "transaction_id": {
+          "type": "string",
+          "description": "Unique transaction identifier"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["success", "failed", "pending"]
+        },
+        "amount": {
+          "type": "number",
+          "description": "Processed amount"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "Address": {
+      "type": "object",
+      "properties": {
+        "street": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "zip_code": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        }
+      }
+    },
+    "Pagination": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pages": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "HealthStatus": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["healthy", "unhealthy", "degraded"]
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "string"
+        },
+        "uptime": {
+          "type": "number"
+        }
+      }
+    },
+    "Metrics": {
+      "type": "object",
+      "properties": {
+        "requests_per_second": {
+          "type": "number"
+        },
+        "average_response_time": {
+          "type": "number"
+        },
+        "error_rate": {
+          "type": "number"
+        },
+        "active_users": {
+          "type": "integer"
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "integer",
+          "description": "Error code"
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error message"
+        },
+        "details": {
+          "type": "string",
+          "description": "Additional error details"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "request_id": {
+          "type": "string",
+          "description": "Request correlation ID"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "ApiKeyAuth": {
+      "type": "apiKey",
+      "in": "query",
+      "name": "api_key",
+      "description": "API key for authentication (insecure - in query param)"
+    },
+    "BearerAuth": {
+      "type": "apiKey",
+      "in": "header",
+      "name": "Authorization",
+      "description": "Bearer token for authentication"
+    },
+    "BasicAuth": {
+      "type": "basic",
+      "description": "Basic authentication (insecure)"
+    },
+    "OAuth2": {
+      "type": "oauth2",
+      "description": "OAuth2 authentication",
+      "flow": "implicit",
+      "authorizationUrl": "https://auth.enterprise.com/oauth/authorize",
+      "scopes": {
+        "read": "Read access",
+        "write": "Write access",
+        "admin": "Administrative access"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "users",
+      "description": "User management operations"
+    },
+    {
+      "name": "admin",
+      "description": "Administrative operations"
+    },
+    {
+      "name": "patients",
+      "description": "Patient management (HIPAA compliant)"
+    },
+    {
+      "name": "healthcare",
+      "description": "Healthcare-related operations"
+    },
+    {
+      "name": "payments",
+      "description": "Payment processing (PCI-DSS compliant)"
+    },
+    {
+      "name": "billing",
+      "description": "Billing and invoicing"
+    },
+    {
+      "name": "monitoring",
+      "description": "System monitoring and health checks"
+    },
+    {
+      "name": "profile",
+      "description": "User profile management"
+    }
+  ],
+  "externalDocs": {
+    "description": "API Documentation",
+    "url": "https://docs.enterprise.com/api"
+  }
+}

@@ -1336,7 +1336,11 @@ def analyze_advanced_analytics(spec: dict) -> Dict[str, Any]:
     """Perform advanced analytics and generate insights."""
     analytics = {
         "complexity_score": 0,
+        "complexity_level": "",
+        "complexity_description": "",
         "maintainability_score": 0,
+        "maintainability_level": "",
+        "maintainability_description": "",
         "technical_debt": [],
         "refactoring_recommendations": [],
         "architecture_insights": []
@@ -1362,21 +1366,63 @@ def analyze_advanced_analytics(spec: dict) -> Dict[str, Any]:
         "nested_schemas": _count_nested_schemas(schemas) * 2
     }
     
-    analytics["complexity_score"] = sum(complexity_factors.values())
+    complexity_score = sum(complexity_factors.values())
+    analytics["complexity_score"] = complexity_score
+    
+    # Interpret complexity score
+    if complexity_score <= 50:
+        analytics["complexity_level"] = "Very Low"
+        analytics["complexity_description"] = "Simple API with minimal complexity. Easy to understand and maintain."
+    elif complexity_score <= 100:
+        analytics["complexity_level"] = "Low"
+        analytics["complexity_description"] = "Simple to moderate complexity. Well-structured and manageable."
+    elif complexity_score <= 200:
+        analytics["complexity_level"] = "Moderate"
+        analytics["complexity_description"] = "Moderate complexity. Some areas may need attention but generally manageable."
+    elif complexity_score <= 400:
+        analytics["complexity_level"] = "High"
+        analytics["complexity_description"] = "High complexity. Consider breaking down into smaller components."
+    elif complexity_score <= 600:
+        analytics["complexity_level"] = "Very High"
+        analytics["complexity_description"] = "Very high complexity. Significant refactoring recommended."
+    else:
+        analytics["complexity_level"] = "Extreme"
+        analytics["complexity_description"] = "Extreme complexity. Major architectural changes needed."
     
     # Calculate maintainability score (inverse of complexity)
     max_complexity = 1000  # Arbitrary max
-    analytics["maintainability_score"] = max(0, 100 - (analytics["complexity_score"] / max_complexity * 100))
+    maintainability_score = max(0, 100 - (complexity_score / max_complexity * 100))
+    analytics["maintainability_score"] = round(maintainability_score, 1)
+    
+    # Interpret maintainability score
+    if maintainability_score >= 90:
+        analytics["maintainability_level"] = "Excellent"
+        analytics["maintainability_description"] = "Very easy to maintain. Well-structured and documented."
+    elif maintainability_score >= 80:
+        analytics["maintainability_level"] = "Good"
+        analytics["maintainability_description"] = "Easy to maintain with minor improvements needed."
+    elif maintainability_score >= 70:
+        analytics["maintainability_level"] = "Fair"
+        analytics["maintainability_description"] = "Some complexity but manageable. Consider improvements."
+    elif maintainability_score >= 60:
+        analytics["maintainability_level"] = "Poor"
+        analytics["maintainability_description"] = "Difficult to maintain. Refactoring recommended."
+    elif maintainability_score >= 50:
+        analytics["maintainability_level"] = "Bad"
+        analytics["maintainability_description"] = "Very difficult to maintain. Significant refactoring needed."
+    else:
+        analytics["maintainability_level"] = "Terrible"
+        analytics["maintainability_description"] = "Extremely difficult to maintain. Major architectural changes required."
     
     # Identify technical debt
-    if analytics["complexity_score"] > 500:
+    if complexity_score > 500:
         analytics["technical_debt"].append("High complexity detected. Consider breaking down into smaller, focused APIs.")
     
     if total_operations > 50:
         analytics["technical_debt"].append("Large number of operations. Consider API versioning and modularization.")
     
     # Refactoring recommendations
-    if analytics["maintainability_score"] < 50:
+    if maintainability_score < 50:
         analytics["refactoring_recommendations"].append("Low maintainability score. Focus on reducing complexity and improving documentation.")
     
     # Architecture insights
@@ -2022,6 +2068,51 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
             if not has_cache_headers and method.lower() == "get":
                 suggestions.append(f"GET operation {path} should document caching headers.")
 
+    # === ADVANCED ANALYSIS FEATURES ===
+    
+    # Enhanced Security Analysis (OWASP API Security Top 10)
+    security_suggestions = analyze_security_enhanced(spec)
+    suggestions.extend(security_suggestions)
+    
+    # Performance Analysis
+    performance_suggestions = analyze_performance(spec)
+    suggestions.extend(performance_suggestions)
+    
+    # API Design Pattern Analysis
+    design_suggestions = analyze_api_design_patterns(spec)
+    suggestions.extend(design_suggestions)
+    
+    # Versioning Analysis
+    versioning_suggestions = analyze_versioning(spec)
+    suggestions.extend(versioning_suggestions)
+    
+    # Documentation Quality Analysis
+    doc_suggestions = analyze_documentation_quality(spec)
+    suggestions.extend(doc_suggestions)
+    
+    # Compliance Analysis
+    compliance_suggestions = analyze_compliance(spec)
+    suggestions.extend(compliance_suggestions)
+    
+    # Testing Recommendations
+    testing_suggestions = analyze_testing_recommendations(spec)
+    suggestions.extend(testing_suggestions)
+    
+    # Monitoring & Observability
+    monitoring_suggestions = analyze_monitoring_observability(spec)
+    suggestions.extend(monitoring_suggestions)
+    
+    # Code Generation Opportunities
+    codegen_suggestions = analyze_code_generation(spec)
+    suggestions.extend(codegen_suggestions)
+    
+    # API Governance
+    governance_suggestions = analyze_api_governance(spec)
+    suggestions.extend(governance_suggestions)
+    
+    # Advanced Analytics
+    analytics = analyze_advanced_analytics(spec)
+
     return {
         "status": "success",
         "is_valid": True,
@@ -2032,6 +2123,19 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
             "schemas_count": len(schemas) if isinstance(schemas, dict) else 0,
         },
         "suggestions": suggestions,
+        "analytics": analytics,
+        "analysis_categories": {
+            "security": len([s for s in security_suggestions]),
+            "performance": len([s for s in performance_suggestions]),
+            "design_patterns": len([s for s in design_suggestions]),
+            "versioning": len([s for s in versioning_suggestions]),
+            "documentation": len([s for s in doc_suggestions]),
+            "compliance": len([s for s in compliance_suggestions]),
+            "testing": len([s for s in testing_suggestions]),
+            "monitoring": len([s for s in monitoring_suggestions]),
+            "code_generation": len([s for s in codegen_suggestions]),
+            "governance": len([s for s in governance_suggestions])
+        }
     }
 
 
