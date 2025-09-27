@@ -1783,7 +1783,7 @@ def analyze_openapi_spec(spec: dict) -> Dict[str, Any]:
         "Monitoring": monitoring_suggestions,
         "Code Generation": codegen_suggestions,
         "Governance": governance_suggestions,
-        "Basic Validation": [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions]
+        "Basic Validation": [s for s in [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions] if len(s) < 500 and not any(indicator in s for indicator in ["Spec validation:", "Failed validating", "do not match any of the regexes", "additionalProperties", "patternProperties", "Proxy at 0x", "functools.partial", "get_schema_content"])]
     }
     
     # Remove empty categories
@@ -2147,7 +2147,7 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
         "Monitoring": monitoring_suggestions,
         "Code Generation": codegen_suggestions,
         "Governance": governance_suggestions,
-        "Basic Validation": [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions]
+        "Basic Validation": [s for s in [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions] if len(s) < 500 and not any(indicator in s for indicator in ["Spec validation:", "Failed validating", "do not match any of the regexes", "additionalProperties", "patternProperties", "Proxy at 0x", "functools.partial", "get_schema_content"])]
     }
     
     # Remove empty categories
