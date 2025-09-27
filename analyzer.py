@@ -1773,17 +1773,17 @@ def analyze_openapi_spec(spec: dict) -> Dict[str, Any]:
 
     # Group suggestions by category
     suggestions = {
-        "🔒 Security": security_suggestions,
-        "⚡ Performance": performance_suggestions,
-        "🏗️ Design Patterns": design_suggestions,
-        "🔄 Versioning": versioning_suggestions,
-        "📝 Documentation": doc_suggestions,
-        "🛡️ Compliance": compliance_suggestions,
-        "🧪 Testing": testing_suggestions,
-        "📈 Monitoring": monitoring_suggestions,
-        "🔧 Code Generation": codegen_suggestions,
-        "🏛️ Governance": governance_suggestions,
-        "📋 Basic Validation": [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions]
+        "Security": security_suggestions,
+        "Performance": performance_suggestions,
+        "Design Patterns": design_suggestions,
+        "Versioning": versioning_suggestions,
+        "Documentation": doc_suggestions,
+        "Compliance": compliance_suggestions,
+        "Testing": testing_suggestions,
+        "Monitoring": monitoring_suggestions,
+        "Code Generation": codegen_suggestions,
+        "Governance": governance_suggestions,
+        "Basic Validation": [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions]
     }
     
     # Remove empty categories
@@ -2137,17 +2137,17 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
 
     # Group suggestions by category
     suggestions = {
-        "🔒 Security": security_suggestions,
-        "⚡ Performance": performance_suggestions,
-        "🏗️ Design Patterns": design_suggestions,
-        "🔄 Versioning": versioning_suggestions,
-        "📝 Documentation": doc_suggestions,
-        "🛡️ Compliance": compliance_suggestions,
-        "🧪 Testing": testing_suggestions,
-        "📈 Monitoring": monitoring_suggestions,
-        "🔧 Code Generation": codegen_suggestions,
-        "🏛️ Governance": governance_suggestions,
-        "📋 Basic Validation": [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions]
+        "Security": security_suggestions,
+        "Performance": performance_suggestions,
+        "Design Patterns": design_suggestions,
+        "Versioning": versioning_suggestions,
+        "Documentation": doc_suggestions,
+        "Compliance": compliance_suggestions,
+        "Testing": testing_suggestions,
+        "Monitoring": monitoring_suggestions,
+        "Code Generation": codegen_suggestions,
+        "Governance": governance_suggestions,
+        "Basic Validation": [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions]
     }
     
     # Remove empty categories

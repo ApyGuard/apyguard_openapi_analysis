@@ -85,16 +85,16 @@ jobs:
           - **Maintainability Score**: ${analytics.maintainability_score || 0}/100
           
           ### 📋 Analysis Categories
-          - 🔒 **Security Issues**: ${categories.security || 0}
-          - ⚡ **Performance Issues**: ${categories.performance || 0}
-          - 🏗️ **Design Pattern Issues**: ${categories.design_patterns || 0}
-          - 🔄 **Versioning Issues**: ${categories.versioning || 0}
-          - 📝 **Documentation Issues**: ${categories.documentation || 0}
-          - 🛡️ **Compliance Issues**: ${categories.compliance || 0}
-          - 🧪 **Testing Recommendations**: ${categories.testing || 0}
-          - 📈 **Monitoring Recommendations**: ${categories.monitoring || 0}
-          - 🔧 **Code Generation Opportunities**: ${categories.code_generation || 0}
-          - 🏛️ **Governance Issues**: ${categories.governance || 0}
+          - **Security Issues**: ${categories.security || 0}
+          - **Performance Issues**: ${categories.performance || 0}
+          - **Design Pattern Issues**: ${categories.design_patterns || 0}
+          - **Versioning Issues**: ${categories.versioning || 0}
+          - **Documentation Issues**: ${categories.documentation || 0}
+          - **Compliance Issues**: ${categories.compliance || 0}
+          - **Testing Recommendations**: ${categories.testing || 0}
+          - **Monitoring Recommendations**: ${categories.monitoring || 0}
+          - **Code Generation Opportunities**: ${categories.code_generation || 0}
+          - **Governance Issues**: ${categories.governance || 0}
           
           ${analysis.suggestions && Object.keys(analysis.suggestions).length > 0 ? 
             Object.entries(analysis.suggestions).map(([category, suggestions]) => 
