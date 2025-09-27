@@ -338,7 +338,11 @@ def set_github_outputs(result: dict):
 
     _set("analysis", json.dumps(result))
     _set("is_valid", str(result.get("is_valid", False)).lower())
-    _set("suggestions_count", str(len(result.get("suggestions", []))))
+    
+    # Calculate total suggestions from grouped suggestions
+    suggestions = result.get("suggestions", {})
+    total_suggestions = sum(len(suggestion_list) for suggestion_list in suggestions.values())
+    _set("suggestions_count", str(total_suggestions))
 
     summary = result.get("summary", {})
     _set("operations_count", str(summary.get("operations_count", 0)))
@@ -1767,6 +1771,24 @@ def analyze_openapi_spec(spec: dict) -> Dict[str, Any]:
     # Advanced Analytics
     analytics = analyze_advanced_analytics(spec)
 
+    # Group suggestions by category
+    suggestions = {
+        "🔒 Security": security_suggestions,
+        "⚡ Performance": performance_suggestions,
+        "🏗️ Design Patterns": design_suggestions,
+        "🔄 Versioning": versioning_suggestions,
+        "📝 Documentation": doc_suggestions,
+        "🛡️ Compliance": compliance_suggestions,
+        "🧪 Testing": testing_suggestions,
+        "📈 Monitoring": monitoring_suggestions,
+        "🔧 Code Generation": codegen_suggestions,
+        "🏛️ Governance": governance_suggestions,
+        "📋 Basic Validation": [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions]
+    }
+    
+    # Remove empty categories
+    suggestions = {k: v for k, v in suggestions.items() if v}
+
     return {
         "status": "success",
         "is_valid": True,
@@ -2113,6 +2135,24 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
     # Advanced Analytics
     analytics = analyze_advanced_analytics(spec)
 
+    # Group suggestions by category
+    suggestions = {
+        "🔒 Security": security_suggestions,
+        "⚡ Performance": performance_suggestions,
+        "🏗️ Design Patterns": design_suggestions,
+        "🔄 Versioning": versioning_suggestions,
+        "📝 Documentation": doc_suggestions,
+        "🛡️ Compliance": compliance_suggestions,
+        "🧪 Testing": testing_suggestions,
+        "📈 Monitoring": monitoring_suggestions,
+        "🔧 Code Generation": codegen_suggestions,
+        "🏛️ Governance": governance_suggestions,
+        "📋 Basic Validation": [s for s in suggestions if s not in security_suggestions + performance_suggestions + design_suggestions + versioning_suggestions + doc_suggestions + compliance_suggestions + testing_suggestions + monitoring_suggestions + codegen_suggestions + governance_suggestions]
+    }
+    
+    # Remove empty categories
+    suggestions = {k: v for k, v in suggestions.items() if v}
+
     return {
         "status": "success",
         "is_valid": True,
@@ -2240,7 +2280,11 @@ def main():
         
         set_output("analysis", json.dumps(result))
         set_output("is_valid", str(result.get("is_valid", False)).lower())
-        set_output("suggestions_count", str(len(result.get("suggestions", []))))
+        
+        # Calculate total suggestions from grouped suggestions
+        suggestions = result.get("suggestions", {})
+        total_suggestions = sum(len(suggestion_list) for suggestion_list in suggestions.values())
+        set_output("suggestions_count", str(total_suggestions))
         
         if "summary" in result:
             summary = result.get("summary", {})

@@ -136,13 +136,15 @@ jobs:
           const comment = `## 🔍 OpenAPI Analysis Results
           
           **Valid**: ${analysis.is_valid ? '✅' : '❌'}
-          **Suggestions**: ${analysis.suggestions ? analysis.suggestions.length : 0}
+          **Total Suggestions**: ${analysis.suggestions ? Object.values(analysis.suggestions).reduce((total, suggestions) => total + suggestions.length, 0) : 0}
           **Operations**: ${analysis.summary ? analysis.summary.operations_count : 0}
           **Paths**: ${analysis.summary ? analysis.summary.paths_count : 0}
           **Schemas**: ${analysis.summary ? analysis.summary.schemas_count : 0}
           
-          ${analysis.suggestions && analysis.suggestions.length > 0 ? 
-            `### 📋 Top Suggestions:\n\n${analysis.suggestions.slice(0, 5).map(s => `- ${s}`).join('\n')}` : 
+          ${analysis.suggestions && Object.keys(analysis.suggestions).length > 0 ? 
+            Object.entries(analysis.suggestions).map(([category, suggestions]) => 
+              `### ${category} (${suggestions.length} issues)\n\n${suggestions.slice(0, 3).map(s => `- ${s}`).join('\n')}${suggestions.length > 3 ? `\n- ... and ${suggestions.length - 3} more` : ''}\n`
+            ).join('\n') : 
             '### ✅ No suggestions found! Your OpenAPI specification looks great! 🎉'
           }`;
             
@@ -211,13 +213,15 @@ jobs:
           const comment = `## 🔍 OpenAPI Analysis Results
           
           **Valid**: ${analysis.is_valid ? '✅' : '❌'}
-          **Suggestions**: ${analysis.suggestions ? analysis.suggestions.length : 0}
+          **Total Suggestions**: ${analysis.suggestions ? Object.values(analysis.suggestions).reduce((total, suggestions) => total + suggestions.length, 0) : 0}
           **Operations**: ${analysis.summary ? analysis.summary.operations_count : 0}
           **Paths**: ${analysis.summary ? analysis.summary.paths_count : 0}
           **Schemas**: ${analysis.summary ? analysis.summary.schemas_count : 0}
           
-          ${analysis.suggestions && analysis.suggestions.length > 0 ? 
-            `### 📋 Top Suggestions:\n\n${analysis.suggestions.slice(0, 5).map(s => `- ${s}`).join('\n')}` : 
+          ${analysis.suggestions && Object.keys(analysis.suggestions).length > 0 ? 
+            Object.entries(analysis.suggestions).map(([category, suggestions]) => 
+              `### ${category} (${suggestions.length} issues)\n\n${suggestions.slice(0, 3).map(s => `- ${s}`).join('\n')}${suggestions.length > 3 ? `\n- ... and ${suggestions.length - 3} more` : ''}\n`
+            ).join('\n') : 
             '### ✅ No suggestions found! Your OpenAPI specification looks great! 🎉'
           }`;
             
