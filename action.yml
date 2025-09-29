@@ -9,18 +9,19 @@ inputs:
     description: "URL to the OpenAPI specification (JSON or YAML)"
     required: false
   repository:
-    description: "GitHub repository to analyze (format: owner/repo)"
+    description: "GitHub repository to analyze (defaults to caller’s repo)"
     required: false
   file:
     description: "Local OpenAPI file path (relative to repository root)"
     required: false
   github_token:
-    description: "GitHub token for private repositories or higher rate limits"
+    description: "GitHub token (defaults to GITHUB_TOKEN) for private repos or higher rate limits"
     required: false
   output_format:
     description: "Output format (json or summary)"
     required: false
     default: "json"
+
 outputs:
   analysis:
     description: "Complete analysis results as JSON string"
@@ -76,6 +77,15 @@ outputs:
     description: "Workflow name that triggered the action"
   user_run_id:
     description: "Unique run ID for this action execution"
+
 runs:
   using: "docker"
   image: "Dockerfile"
+  env:
+    # Pass GitHub defaults into the container
+    GITHUB_TOKEN: ${{ inputs.github_token || secrets.GITHUB_TOKEN }}
+    GITHUB_REPOSITORY: ${{ github.repository }}
+    GITHUB_WORKSPACE: ${{ github.workspace }}
+    GITHUB_ACTOR: ${{ github.actor }}
+    GITHUB_RUN_ID: ${{ github.run_id }}
+    GITHUB_WORKFLOW: ${{ github.workflow }}
