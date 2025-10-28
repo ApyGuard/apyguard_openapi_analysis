@@ -20,64 +20,72 @@ A comprehensive GitHub Action that analyzes OpenAPI specifications and provides 
 
 ### ⚡ **Performance & Optimization**
 - **Response Complexity Analysis**: Identifies overly complex response schemas
-- **Caching Recommendations**: Cache-Control, ETag, Last-Modified headers
-- **Rate Limiting Analysis**: API throttling and quota management
-- **Performance Metrics**: Response time estimates and payload analysis
-- **Pagination Detection**: List operation pagination requirements
+## Features
+
+### 🔍 **Core Analysis**
+- **Comprehensive Validation**: Validates OpenAPI specs against best practices
+- **Detailed Reporting**: Provides actionable suggestions for improvement
+- **Version-Aware**: Supports OpenAPI 3.x and Swagger 2.0 (v2) specs
+- **Easy Integration**: Simple one-step setup in your GitHub workflows
+
+### 🛡️ **Advanced Security Analysis**
+- **OWASP API Security Top 10**: Complete compliance checking
+- **Authentication Analysis**: OAuth2, API keys, JWT token validation
+- **Authorization Checks**: Function-level and object-level authorization
+- **Data Exposure Analysis**: Identifies sensitive data exposure risks
+- **Injection Vulnerability Detection**: SQL injection and XSS pattern detection
+- **Security Misconfiguration**: HTTPS, CORS, and security header analysis
+
+### ⚡ **Performance & Optimization**
+- **Response Complexity Analysis**: Identifies overly complex response schemas
+## Features
+
+### 🔍 **Core Analysis**
+- **Comprehensive Validation**: Validates OpenAPI specs against general best practices and checks for schema validity.
+- **Detailed Reporting**: Provides actionable suggestions for improvement grouped by category (e.g., Security, Performance).
+- **Version-Aware**: Supports OpenAPI 3.x and Swagger 2.0 (v2) specifications. (v2 specs are automatically normalized to a v3-like structure for consistent analysis).
+
+### 🛡️ **Advanced Security Analysis**
+- **OWASP API Security Top 10 Checks**: Identifies common vulnerabilities based on the Top 10 list.
+- **Authentication Analysis**: Checks for proper definition of API keys, Basic, Bearer, and OAuth2 security schemes.
+- **Authorization Checks**: Identifies privileged operations and ID-based endpoints lacking explicit security requirements.
+- **Data Exposure Analysis**: Scans response schemas for sensitive data field names (e.g., `password`, `ssn`).
+
+### ⚡ **Performance & Optimization**
+- **Response Complexity Analysis**: Calculates schema complexity to flag potentially large responses that may need pagination or field selection.
+- **Caching Recommendations**: Checks for and recommends appropriate caching headers (`Cache-Control`, `ETag`) for `GET` operations.
+- **Rate Limiting Analysis**: Checks for and recommends rate limiting headers in responses.
+- **Pagination Detection**: Identifies list operations that should support pagination parameters.
 
 ### 🏗️ **API Design & Patterns**
-- **RESTful Compliance**: CRUD operation completeness analysis
-- **Resource Hierarchy**: Proper resource organization and relationships
-- **HTTP Method Usage**: Appropriate method selection and idempotency
-- **Naming Conventions**: Consistent path and parameter naming
-- **Design Pattern Detection**: Common API patterns and anti-patterns
+- **RESTful Compliance**: Analyzes paths for CRUD operation completeness per resource.
+- **HTTP Method Usage**: Validates proper method selection (e.g., GET/DELETE should generally not have a request body) and suggests documenting idempotent behavior for `PUT`/`DELETE`.
+- **Naming Conventions**: Checks for consistent path and property naming styles.
 
 ### 📊 **Advanced Analytics**
-- **Complexity Scoring**: API complexity and maintainability metrics
-- **Technical Debt Identification**: Areas requiring refactoring
-- **Architecture Insights**: Domain modeling and design recommendations
-- **Quality Metrics**: Comprehensive API quality assessment
+- **Complexity Scoring**: Calculates an API **Complexity Score** based on paths, operations, and schema nesting.
+- **Maintainability Score**: Derives a **Maintainability Score** (0-100 scale) to provide an estimate of how easy the API is to maintain.
 
 ### 🛡️ **Compliance & Standards**
-- **GDPR Compliance**: Personal data handling and privacy requirements
-- **HIPAA Compliance**: Healthcare data protection standards
-- **PCI-DSS Compliance**: Payment card data security
-- **Accessibility Standards**: WCAG compliance for error messages
-- **Industry-Specific**: Regulatory compliance checking
+- **GDPR Check**: Identifies endpoints handling personal data and recommends GDPR adherence.
+- **Industry Compliance**: Identifies healthcare (HIPAA) and payment (PCI-DSS) related endpoints and recommends compliance measures.
 
-### 🧪 **Testing & Quality Assurance**
-- **Test Scenario Generation**: Comprehensive test case recommendations
-- **Mock Data Generation**: Schema-based test data creation
-- **Contract Testing**: API compatibility and versioning strategies
-- **Load Testing**: Performance and scalability recommendations
-- **Security Testing**: Authentication and authorization test scenarios
+### 🧪 **Quality Assurance & Testing**
+- **Test Scenario Recommendations**: Generates suggested test scenarios, including security and functional testing.
+- **Testing Strategy**: Recommends implementing mock data generation, contract testing, and load testing.
 
 ### 📈 **Monitoring & Observability**
-- **Health Check Endpoints**: System monitoring and status endpoints
-- **Metrics Collection**: Performance and usage analytics
-- **Logging Strategies**: Structured logging and correlation IDs
-- **Alerting Configuration**: Error rate and performance monitoring
-- **Distributed Tracing**: Request tracing and debugging support
-
-### 🔧 **Code Generation & SDKs**
-- **Client SDK Generation**: Multi-language SDK creation
-- **Server Stubs**: Framework-specific server implementations
-- **TypeScript Types**: Type-safe client development
-- **Database Models**: ORM framework integration
-- **Mock Servers**: Development and testing environments
+- **Health/Metrics Endpoints**: Checks for and recommends standard health check and metrics endpoints.
+- **Logging Strategies**: Recommends implementing structured logging with correlation IDs and error tracking.
 
 ### 🏛️ **API Governance**
-- **Naming Consistency**: Standardized naming conventions
-- **Style Guide Compliance**: Organizational API standards
-- **Versioning Strategy**: Semantic versioning and migration paths
-- **Deprecation Management**: Proper API lifecycle management
-- **Change Management**: Breaking change detection and communication
+- **Versioning Strategy**: Checks for versioning information in the `info` block and server URLs.
+- **Operation ID Check**: Ensures all operation IDs are present and unique.
 
 ### 🏢 **Repository Analysis**
-- **Multi-File Support**: Analyze entire repositories for OpenAPI files
-- **Auto-Discovery**: Automatically finds OpenAPI files in repositories
-- **Repository Metadata**: GitHub statistics and project information
-- **Local File Support**: Analyze local OpenAPI files in your repository
+- **Multi-File Support**: Analyzes multiple OpenAPI files found within a repository.
+- **Auto-Discovery**: Automatically finds OpenAPI files using common patterns.
+- **Repository Metadata**: Retrieves and reports GitHub repository statistics like stars and forks.
 
 ## Quick Start
 
