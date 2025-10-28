@@ -5,56 +5,79 @@ A comprehensive GitHub Action that analyzes OpenAPI specifications and provides 
 ## Features
 
 ### 🔍 **Core Analysis**
-- **Comprehensive Validation**: Validates OpenAPI specs against general best practices and checks for schema validity.
-- **Detailed Reporting**: Provides actionable suggestions for improvement grouped by category (e.g., Security, Performance).
-- **Version-Aware**: Supports OpenAPI 3.x and Swagger 2.0 (v2) specifications. (v2 specs are automatically normalized to a v3-like structure for consistent analysis).
+
+  - **Comprehensive Validation**: Validates OpenAPI specs against general best practices and checks for schema validity.
+  - **Detailed Reporting**: Provides actionable suggestions for improvement grouped by category (e.g., Security, Performance).
+  - **Version-Aware**: Supports OpenAPI 3.x and Swagger 2.0 (v2) specifications. (v2 specs are automatically normalized to a v3-like structure for consistent analysis).
 
 ### 🛡️ **Advanced Security Analysis**
-- **OWASP API Security Top 10 Checks**: Identifies common vulnerabilities based on the Top 10 list.
-- **Authentication Analysis**: Checks for proper definition of API keys, Basic, Bearer, and OAuth2 security schemes.
-- **Authorization Checks**: Identifies privileged operations and ID-based endpoints lacking explicit security requirements.
-- **Data Exposure Analysis**: Scans response schemas for sensitive data field names (e.g., `password`, `ssn`).
+
+  - **OWASP API Security Top 10 Checks**: Comprehensive implementation of all 10 OWASP API Security Top 10 checks:
+      - **API1:2019** - Broken Object Level Authorization (ID-based endpoints without proper security)
+      - **API2:2019** - Broken User Authentication (insecure API keys, missing OAuth flows, basic auth warnings)
+      - **API3:2019** - Excessive Data Exposure (sensitive field names like `password`, `ssn` in response schemas)
+      - **API4:2019** - Lack of Resources & Rate Limiting (missing rate limiting headers and configurations)
+      - **API5:2019** - Broken Function Level Authorization (privileged operations without security)
+      - **API6:2019** - Mass Assignment (unrestricted parameter binding vulnerabilities)
+      - **API7:2019** - Security Misconfiguration (insecure HTTP URLs, missing security headers)
+      - **API8:2019** - Injection (SQL-like query parameters without proper validation)
+      - **API9:2019** - Improper Assets Management (deprecated API versions, missing documentation)
+      - **API10:2019** - Insufficient Logging & Monitoring (missing audit trails and monitoring endpoints)
 
 ### ⚡ **Performance & Optimization**
-- **Response Complexity Analysis**: Calculates schema complexity to flag potentially large responses that may need pagination or field selection.
-- **Caching Recommendations**: Checks for and recommends appropriate caching headers (`Cache-Control`, `ETag`) for `GET` operations.
-- **Rate Limiting Analysis**: Checks for and recommends rate limiting headers in responses.
-- **Pagination Detection**: Identifies list operations that should support pagination parameters.
+
+  - **Response Complexity Analysis**: Calculates schema complexity to flag potentially large responses that may need pagination or field selection.
+  - **Caching Recommendations**: Checks for and recommends appropriate caching headers for `GET` operations.
+  - **Rate Limiting Analysis**: Checks for and recommends rate limiting headers in responses.
+  - **Pagination Detection**: Identifies list operations that should support pagination parameters.
 
 ### 🏗️ **API Design & Patterns**
-- **RESTful Compliance**: Analyzes paths for CRUD operation completeness per resource.
-- **HTTP Method Usage**: Validates proper method selection (e.g., GET/DELETE should generally not have a request body) and suggests documenting idempotent behavior for `PUT`/`DELETE`.
-- **Naming Conventions**: Checks for consistent path and property naming styles.
+
+  - **RESTful Compliance**: Analyzes paths for CRUD operation completeness per resource.
+  - **HTTP Method Usage**: Validates proper method selection and suggests documenting idempotent behavior for `PUT`/`DELETE`.
+  - **Naming Conventions**: Checks for consistent path and property naming styles.
 
 ### 📊 **Advanced Analytics**
-- **Complexity Scoring**: Calculates an API **Complexity Score** based on paths, operations, and schema nesting.
-- **Maintainability Score**: Derives a **Maintainability Score** (0-100 scale) to provide an estimate of how easy the API is to maintain.
 
-### 🛡️ **Compliance & Standards**
-- **GDPR Check**: Identifies endpoints handling personal data and recommends GDPR adherence.
-- **Industry Compliance**: Identifies healthcare (HIPAA) and payment (PCI-DSS) related endpoints and recommends compliance measures.
-
-### 🧪 **Quality Assurance & Testing**
-- **Test Scenario Recommendations**: Generates suggested test scenarios, including security and functional testing.
-- **Testing Strategy**: Recommends implementing mock data generation, contract testing, and load testing.
-
-### 📈 **Monitoring & Observability**
-- **Health/Metrics Endpoints**: Checks for and recommends standard health check and metrics endpoints.
-- **Logging Strategies**: Recommends implementing structured logging with correlation IDs and error tracking.
+  - **Complexity Scoring**: Calculates an API **Complexity Score** (0-1000+) based on paths, operations, and schema nesting.
+  - **Maintainability Score**: Derives a **Maintainability Score** (0-100 scale).
 
 ### 🏛️ **API Governance**
-- **Versioning Strategy**: Checks for versioning information in the `info` block and server URLs.
-- **Operation ID Check**: Ensures all operation IDs are present and unique.
+
+  - **Versioning Strategy**: Checks for versioning information in the `info` block and server URLs.
+  - **Operation ID Check**: Ensures all operation IDs are present and unique.
+  - **Deprecation Management**: Identifies deprecated operations and suggests adding migration documentation.
+
+### 🛡️ **Compliance & Standards**
+
+  - **GDPR Compliance**: Identifies endpoints handling personal data and recommends GDPR adherence.
+  - **Industry Compliance**: Checks for healthcare (HIPAA) and payment (PCI-DSS) related endpoints and recommends compliance measures.
+  - **Accessibility**: Analyzes API design for accessibility considerations and inclusive design patterns.
+
+### 🧪 **Quality Assurance & Testing**
+
+  - **Test Scenario Recommendations**: Generates suggested test scenarios, including security and functional testing.
+  - **Testing Strategy**: Recommends implementing mock data generation, contract testing, and load testing.
+
+### 📈 **Monitoring & Observability**
+
+  - **Health/Metrics Endpoints**: Checks for and recommends standard health check and metrics endpoints.
+  - **Logging Strategies**: Recommends implementing structured logging with correlation IDs and error tracking.
 
 ### 🏢 **Repository Analysis**
-- **Multi-File Support**: Analyzes multiple OpenAPI files found within a repository.
-- **Auto-Discovery**: Automatically finds OpenAPI files using common patterns.
-- **Repository Metadata**: Retrieves and reports GitHub repository statistics like stars and forks.
+
+  - **Multi-File Support**: Analyzes multiple OpenAPI files found within a repository.
+  - **Auto-Discovery**: Automatically finds OpenAPI files using common patterns.
+  - **Repository Metadata**: Retrieves and reports GitHub repository statistics like stars and forks.
+
+-----
 
 ## Quick Start
 
 ### Example Usage
 
+The example below shows how to run the analysis, display core metrics, and automatically comment on a Pull Request with the top suggestions.
+
 ```yaml
 name: OpenAPI Analysis
 
@@ -128,392 +151,191 @@ jobs:
           });
 ```
 
-### Option 1: Using the GitHub Action (Recommended)
+### Option 1: Using a Local File (Recommended)
 
-The action is now fully tested and works reliably with all repository types. Add this workflow to your repository (`.github/workflows/openapi-analysis.yml`):
+To analyze a file checked into your repository, set the `file` input.
 
 ```yaml
-name: OpenAPI Analysis
-
-on:
-  push:
-    branches: [ main, develop ]
-    paths:
-      - '**/*.json'
-      - '**/*.yaml'
-      - '**/*.yml'
-  pull_request:
-    branches: [ main, develop ]
-    paths:
-      - '**/*.json'
-      - '**/*.yaml'
-      - '**/*.yml'
-  workflow_dispatch:
-
-jobs:
-  analyze-openapi:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Analyze OpenAPI
-      id: analyze
-      uses: ApyGuard/apyguard_openapi_analysis@main
-      with:
-        # Change this to your OpenAPI file path
-        file: your-openapi-file.json
-        output_format: json
-        
-    - name: Display Results
-      run: |
-        echo "OpenAPI Analysis Results:"
-        echo "========================="
-        echo "Valid: ${{ steps.analyze.outputs.is_valid }}"
-        echo "Suggestions: ${{ steps.analyze.outputs.suggestions_count }}"
-        echo "Operations: ${{ steps.analyze.outputs.operations_count }}"
-        echo "Paths: ${{ steps.analyze.outputs.paths_count }}"
-        echo "Schemas: ${{ steps.analyze.outputs.schemas_count }}"
-        
-    - name: Comment on PR
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const analysis = JSON.parse('${{ steps.analyze.outputs.analysis }}');
-          const comment = `## 🔍 OpenAPI Analysis Results
-          
-          **Valid**: ${analysis.is_valid ? '✅' : '❌'}
-          **Total Suggestions**: ${analysis.suggestions ? Object.values(analysis.suggestions).reduce((total, suggestions) => total + suggestions.length, 0) : 0}
-          **Operations**: ${analysis.summary ? analysis.summary.operations_count : 0}
-          **Paths**: ${analysis.summary ? analysis.summary.paths_count : 0}
-          **Schemas**: ${analysis.summary ? analysis.summary.schemas_count : 0}
-          
-          ${analysis.suggestions && Object.keys(analysis.suggestions).length > 0 ? 
-            Object.entries(analysis.suggestions).map(([category, suggestions]) => 
-              `### ${category} (${suggestions.length} issues)\n\n${suggestions.slice(0, 3).map(s => `- ${s}`).join('\n')}${suggestions.length > 3 ? `\n- ... and ${suggestions.length - 3} more` : ''}\n`
-            ).join('\n') : 
-            '### ✅ No suggestions found! Your OpenAPI specification looks great! 🎉'
-          }`;
-            
-          github.rest.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: comment
-          });
+- name: Analyze OpenAPI
+  uses: ApyGuard/apyguard_openapi_analysis@main
+  with:
+    file: api/openapi.yaml  # Specify your file path here
 ```
 
 ### Option 2: Analyze from URL
 
-```yaml
-name: OpenAPI Analysis
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Analyze OpenAPI from URL
-      uses: ApyGuard/apyguard_openapi_analysis@main
-      with:
-        spec_url: 'https://api.example.com/openapi.json'
-        output_format: json
-```
-
-### Option 3: Analyze Repository
+To analyze a specification hosted externally:
 
 ```yaml
-name: OpenAPI Analysis
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Analyze Repository OpenAPI Files
-      uses: ApyGuard/apyguard_openapi_analysis@main
-      with:
-        repository: ${{ github.repository }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        output_format: summary
+- name: Analyze OpenAPI from URL
+  uses: ApyGuard/apyguard_openapi_analysis@main
+  with:
+    spec_url: 'https://api.example.com/v1/openapi.json'
+    output_format: json
 ```
 
-## How to Use in Other Repositories
+### Option 3: Analyze Entire Repository
 
-### 1. **Copy the Workflow**
-Copy one of the workflow examples above to your repository's `.github/workflows/` directory.
+To automatically discover and analyze all OpenAPI files (`*.json`, `*.yaml`, `*.yml`) in a repository:
 
-### 2. **Customize the File Path**
-Replace `your-openapi-file.json` with your actual OpenAPI file path:
 ```yaml
-with:
-  file: api/openapi.json  # Your OpenAPI file path
+- name: Analyze Repository OpenAPI Files
+  uses: ApyGuard/apyguard_openapi_analysis@main
+  with:
+    repository: ${{ github.repository }}
+    github_token: ${{ secrets.GITHUB_TOKEN }} # Required for private repos or higher limits
+    output_format: summary
 ```
 
-### 3. **Set Up Triggers**
-Configure when the analysis should run:
-```yaml
-on:
-  push:
-    branches: [ main ]           # Run on pushes to main
-    paths: [ '**/*.json' ]      # Only when JSON files change
-  pull_request:
-    branches: [ main ]          # Run on PRs to main
-  workflow_dispatch:            # Allow manual triggering
-```
+-----
 
-### 4. **Commit and Push**
-The workflow will run automatically when you push changes to your OpenAPI files.
+## Outputs and Metrics
 
-## Workflow Templates
+The action provides granular outputs for integration with status checks, dashboards, and advanced reporting. All output names are available in the `action.yml` file.
 
-We provide ready-to-use workflow templates that you can copy to your repository:
+| Output Name | Description |
+| :--- | :--- |
+| `analysis` | Complete analysis results as JSON string |
+| `is_valid` | Boolean indicating if the spec is structurally valid |
+| `suggestions_count` | **Total** number of suggestions found |
+| **`operations_count`** | Number of operations in the spec |
+| **`paths_count`** | Number of paths in the spec |
+| **`schemas_count`** | Number of schemas in the spec |
+| **`complexity_score`** | API complexity score (0-1000+) |
+| **`maintainability_score`** | API maintainability score (0-100) |
+| `security_issues` | Count of security-related suggestions |
+| `performance_issues` | Count of performance-related suggestions |
+| `design_pattern_issues` | Count of design pattern suggestions |
+| `versioning_issues` | Count of versioning-related suggestions |
+| `documentation_issues` | Count of documentation quality suggestions |
+| `compliance_issues` | Count of compliance-related suggestions |
+| `testing_recommendations` | Count of testing strategy suggestions |
+| `monitoring_recommendations` | Count of monitoring/observability suggestions |
+| `code_generation_opportunities` | Count of code generation suggestions |
+| `governance_issues` | Count of API governance suggestions |
+| `repository_name` | Repository name (when analyzing repositories) |
+| `repository_full_name` | Full repository name (owner/repo) |
+| `repository_url` | Repository URL |
+| `repository_stars` | Number of repository stars (for repo analysis) |
+| `repository_forks` | Number of repository forks (for repo analysis) |
+| `user_actor` | GitHub username who triggered the action |
+| `user_repository` | Repository where the action was triggered |
+| `user_workflow` | Workflow name that triggered the action |
+| `user_run_id` | Unique run ID for this action execution |
 
-### 📁 **Available Workflow Templates**
+-----
 
-| Workflow Template | Purpose | Best For | Triggers | Input | Output |
-|------------------|---------|----------|----------|-------|--------|
-| **`analyze-single-openapi-file.yml`** | Analyze one OpenAPI file from URL | External APIs, single file analysis | Push, PR, Manual | OpenAPI URL | Analysis results with suggestions |
-| **`analyze-repository-openapi-files.yml`** | Find and analyze all OpenAPI files in repository | Multi-file repositories, comprehensive analysis | Push, PR, Manual | Repository name | All files + repository metadata |
-| **`analyze-openapi-advanced.yml`** | Advanced multi-type analysis with scheduling | Enterprise use, automated monitoring | Push, PR, Schedule, Manual | Analysis type | Reports + artifacts + PR comments |
-| **`test-openapi-analyzer.yml`** | Test the analyzer in different scenarios | Development, debugging | Manual only | Test type | Test results and validation |
+## Example Output on PR Comment
 
-### 🚀 **Quick Setup with Templates**
-
-1. **Copy a workflow template** from `.github/workflows/` to your repository's `.github/workflows/` directory
-2. **Rename the file** to something like `openapi-analysis.yml`
-3. **Customize the triggers** (branches, events) as needed
-4. **Commit and push** - the workflow will run automatically
-
-### 📋 **Template Comparison**
-
-| Feature | Single File | Repository | Advanced |
-|---------|-------------|------------|----------|
-| **File Analysis** | ✅ One file | ✅ Multiple files | ✅ Multiple types |
-| **URL Support** | ✅ Yes | ❌ No | ✅ Yes |
-| **Local Files** | ❌ No | ❌ No | ✅ Yes |
-| **Repository Metadata** | ❌ No | ✅ Yes | ✅ Yes |
-| **Scheduled Runs** | ❌ No | ❌ No | ✅ Daily |
-| **Report Generation** | ❌ No | ❌ No | ✅ Yes |
-| **Artifact Upload** | ❌ No | ❌ No | ✅ Yes |
-| **PR Comments** | ✅ Basic | ✅ Detailed | ✅ Advanced |
-| **Manual Dispatch** | ✅ Yes | ✅ Yes | ✅ Yes |
-| **Complexity** | 🟢 Simple | 🟡 Medium | 🔴 Advanced |
-
-## What This Workflow Does
-
-### 🔍 **Analysis Features**
-- **Validates** your OpenAPI specification
-- **Counts** operations, paths, and schemas
-- **Provides suggestions** for improvements
-- **Checks** for missing documentation
-- **Validates** security configurations
-- **Reviews** response definitions
-
-### 📊 **Outputs**
-- **Valid**: Whether the spec is valid
-- **Suggestions**: Number of improvement suggestions
-- **Operations**: Number of API operations
-- **Paths**: Number of API paths
-- **Schemas**: Number of data schemas
-
-### 🎯 **Triggers**
-- **Push**: Runs when you push to main/develop branches
-- **Pull Request**: Runs on PRs to main/develop branches
-- **Manual**: Can be triggered manually via GitHub Actions UI
-- **File Changes**: Only runs when OpenAPI files are modified
-
-## Example Output
-
-The workflow will generate a comment like this on your PRs:
+The PR comment example uses a template that categorizes results and provides a summary:
 
 ```markdown
 ## 🔍 OpenAPI Analysis Results
 
 **Valid**: ✅
-**Suggestions**: 5
+**Total Suggestions**: 5
 **Operations**: 10
 **Paths**: 2
 **Schemas**: 3
 
+### 📋 Analysis Categories
+- **Security Issues**: 1
+- **Performance Issues**: 2
+- **Design Pattern Issues**: 1
+- **Versioning Issues**: 0
+- **Documentation Issues**: 2
+- **Compliance Issues**: 0
+- **Testing Recommendations**: 1
+- **Monitoring Recommendations**: 1
+- **Code Generation Opportunities**: 0
+- **Governance Issues**: 0
+- **Complexity Score**: 85
+- **Maintainability Score**: 87.5/100
+
 ### 📋 Top Suggestions:
 
-- Spec is missing an API title.
-- No servers defined. Consider specifying servers for clarity.
-- Operation GET /users missing security definition.
-- POST operation /users should have requestBody.
-- Operation POST /users missing security definition.
-
-Detailed results are available in the workflow artifacts.
+- Operation GET /users missing summary.
+- Operation GET /users should include caching headers (Cache-Control, ETag, Last-Modified) for better performance.
+- ID-based endpoint GET /users/{id} should have explicit security requirements to prevent unauthorized access to other users' data.
+- ... and 2 more
 ```
 
-## Customization
+-----
 
-### Change the File Path
-Replace `your-openapi-file.json` with your actual OpenAPI file:
+## Technical Requirements
 
-```yaml
-- name: Run OpenAPI Analysis
-  run: |
-    python analyzer.py api/openapi.json > analysis-results.json
-```
+### **Runtime Environment**
+- **Python Version**: 3.11+ (containerized)
+- **Dependencies**: 
+  - `requests` - HTTP client for API calls
+  - `PyYAML` - YAML parsing support
+  - `openapi-spec-validator` - OpenAPI specification validation
 
-### Multiple Files
-To analyze multiple OpenAPI files, create separate steps:
+### **GitHub Actions Integration**
+- **Environment Variables**: Automatically reads GitHub Actions inputs:
+  - `INPUT_SPEC_URL` - OpenAPI specification URL
+  - `INPUT_REPOSITORY` - GitHub repository (owner/repo)
+  - `INPUT_FILE` - Local file path
+  - `INPUT_GITHUB_TOKEN` - GitHub token for private repos
+  - `INPUT_OUTPUT_FORMAT` - Output format (json/summary)
+- **Context Variables**: Provides GitHub Actions context:
+  - `GITHUB_ACTIONS` - Detects GitHub Actions environment
+  - `GITHUB_TOKEN` - Default GitHub token
 
-```yaml
-- name: Analyze API v1
-  run: |
-    python analyzer.py api-v1.json > analysis-v1.json
-    
-- name: Analyze API v2  
-  run: |
-    python analyzer.py api-v2.json > analysis-v2.json
-```
+### **Supported File Formats**
+- **OpenAPI Specifications**: 3.0+, 3.1+
+- **Swagger Specifications**: 2.0 (automatically normalized)
+- **File Extensions**: `.json`, `.yaml`, `.yml`
+- **Auto-Discovery Patterns**: `openapi.*`, `swagger.*`, `api.*`, `spec.*`
 
-### Different File Formats
-The analyzer supports both JSON and YAML:
+-----
 
-```yaml
-# For JSON files
-python analyzer.py api.json
+## Support and Documentation
 
-# For YAML files  
-python analyzer.py api.yaml
-```
+| Area | Link / Contact |
+| :--- | :--- |
+| **General Issues** | [GitHub Issues](https://github.com/ApyGuard/openapi_analyzer/issues) |
+| **Discussions & Questions** | [GitHub Discussions](https://github.com/ApyGuard/openapi_analyzer/discussions) |
+| **Security Reporting** | Use [GitHub Security Advisories](https://github.com/ApyGuard/openapi_analyzer/security) or email `security@apyguard.com`. |
+| **Privacy Policy** | See the [PRIVACY.md](PRIVACY.md) file for details on data collection and usage. |
 
-## What the Analyzer Checks
-
-### 📋 Basic Validation
-- ✅ Valid JSON/YAML format
-- ✅ OpenAPI specification compliance
-- ✅ Required fields (title, description, version)
-
-### 🔐 Security Analysis
-- 🔒 Global security requirements
-- 🔒 Operation-level security definitions
-- 🔒 Authentication scheme documentation
-
-### 📝 Documentation Quality
-- 📖 Operation descriptions and summaries
-- 📖 Parameter descriptions
-- 📖 Response descriptions and schemas
-- 📖 Schema definitions and types
-
-### 🛠️ Best Practices
-- 🎯 Unique operation IDs
-- 🎯 Proper HTTP status codes
-- 🎯 Server definitions
-- 🎯 Request/response content types
-- 🎯 Schema composition and inheritance
-
-## Advanced Usage
-
-### Repository Analysis
-Analyze all OpenAPI files in a repository:
-
-```yaml
-- name: Analyze Repository
-  uses: ApyGuard/apyguard_openapi_analysis@main
-  with:
-    repository: ${{ github.repository }}
-    github_token: ${{ secrets.GITHUB_TOKEN }}
-    output_format: summary
-```
-
-### URL Analysis
-Analyze OpenAPI specs from URLs:
-
-```yaml
-- name: Analyze from URL
-  uses: ApyGuard/apyguard_openapi_analysis@main
-  with:
-    spec_url: 'https://api.example.com/openapi.json'
-    output_format: json
-```
-
-### Custom Analysis Rules
-You can modify the analyzer script to add custom validation rules by editing the `analyze_openapi_spec` function.
-
-## Troubleshooting
-
-### File Not Found Error
-Make sure your OpenAPI file exists in the repository root or update the file path in the workflow.
-
-### Permission Issues
-Ensure the workflow has permission to read your OpenAPI files.
-
-### Analysis Not Running
-Check that your file has a `.json`, `.yaml`, or `.yml` extension and is in the repository.
-
-### Docker Issues
-The action uses Docker containers to ensure consistent execution across different environments. If you encounter Docker-related issues:
-
-1. **Check GitHub Actions logs** for specific error messages
-2. **Verify file paths** are correct relative to your repository root
-3. **Ensure proper permissions** for the workflow to access your files
-4. **Check network connectivity** if analyzing from URLs
-
-The Docker container is configured to work with GitHub Actions' working directory (`/github/workspace`) and will automatically find your OpenAPI files.
-
-## Requirements
-
-- OpenAPI 3.0+ or Swagger 2.0 specifications (v2 is automatically normalized to v3-like structure)
-- For single file analysis: Publicly accessible URL to the specification
-- For repository analysis: Public repository or GitHub token for private repositories
-- Valid JSON or YAML format
-
-## Support
-
-For support and questions:
-- 📧 **Issues**: [GitHub Issues](https://github.com/ApyGuard/openapi_analyzer/issues)
-- 📖 **Documentation**: [GitHub Wiki](https://github.com/ApyGuard/openapi_analyzer/wiki)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/ApyGuard/openapi_analyzer/discussions)
+-----
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License**.
+
+Copyright (c) 2025 ApyGuard.
+
+-----
 
 ## Changelog
 
 ### v1.0.2
-- 🔧 **Docker Fix**: Fixed Docker container to work correctly with GitHub Actions working directory
-- 🔧 **Path Resolution**: Improved file path handling for local OpenAPI files
-- 🔧 **Container Stability**: Enhanced Docker container reliability across different environments
-- ✅ **Verified Compatibility**: Tested with multiple repository types and file structures
+
+  - 🔧 **Docker Fix**: Fixed Docker container to work correctly with GitHub Actions working directory.
+  - 🔧 **Path Resolution**: Improved file path handling for local OpenAPI files.
+  - 🔧 **Container Stability**: Enhanced Docker container reliability across different environments.
+  - 📚 **Documentation**: Updated README with comprehensive feature documentation and accurate output descriptions.
+  - 🛡️ **Security**: Enhanced OWASP API Security Top 10 implementation with all 10 checks.
+  - 📊 **Analytics**: Added comprehensive analysis categories and improved scoring algorithms.
 
 ### v1.0.1
-- 🆕 **Repository Analysis**: Analyze entire repositories for OpenAPI files
-- 🆕 **Auto-Discovery**: Automatically finds OpenAPI files in repositories
-- 🆕 **Repository Metadata**: Get repository information and statistics
-- 🆕 **Multiple File Support**: Analyze multiple OpenAPI files in one run
-- 🆕 **Enhanced CLI**: Support for repository analysis via command line
-- 🆕 **GitHub Token Support**: Support for private repositories
-- 🆕 **Output Formats**: JSON and summary output formats
-- 🆕 **Rate Limit Management**: Built-in GitHub API rate limit handling
-- 🆕 **Local File Support**: Analyze local OpenAPI files in repositories
 
-### v1.0.0
-- Initial release
-- Basic OpenAPI validation
-- Comprehensive best practice checks
-- Security analysis
-- Documentation quality assessment
+  - 🆕 **Repository Analysis**: Analyze entire repositories for OpenAPI files.
+  - 🆕 **Auto-Discovery**: Automatically finds OpenAPI files in repositories.
+  - 🆕 **Output Formats**: JSON and summary output formats.
+  - 🆕 **Compliance Checks**: Added GDPR, HIPAA, and PCI-DSS compliance analysis.
+  - 🆕 **Advanced Analytics**: Implemented complexity and maintainability scoring.
 
----
+### v1.0.0 - 2025-01-XX
 
-Made with ❤️ by [ApyGuard](https://github.com/ApyGuard)
+  - Initial release of OpenAPI Analyzer.
+  - Basic OpenAPI specification validation.
+  - Comprehensive best practice checks.
+  - OWASP API Security Top 10 analysis.
+  - Performance and optimization recommendations.
+
+-----
+
+Made with ❤️ by ApyGuard
