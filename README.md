@@ -106,7 +106,7 @@ jobs:
       
     - name: Analyze OpenAPI
       id: analyze
-      uses: ApyGuard/apyguard_openapi_analysis@main
+      uses: ApyGuard/apyguard_openapi_analysis@v1.0.5
       with:
         # Change this to your OpenAPI file path
         file: your-openapi-file.json
@@ -310,6 +310,24 @@ Copyright (c) 2025 ApyGuard.
 -----
 
 ## Changelog
+
+### v1.0.5 - 2025-09-27
+
+  - 🚀 **Latest Release**: Enhanced OpenAPI specification analysis
+  - 🛡️ **Security**: Improved security checks and OWASP API Security Top 10 implementation
+  - 📚 **Documentation**: Better documentation quality assessment
+  - ✅ **Validation**: Comprehensive best practice validation
+  - 🔧 **Docker**: Updated Docker image with latest improvements
+
+### v1.0.4
+
+  - 🔧 **Bug Fixes**: Various stability improvements
+  - 📊 **Analytics**: Enhanced complexity and maintainability scoring
+
+### v1.0.3
+
+  - 🛡️ **Security**: Enhanced OWASP API Security Top 10 checks
+  - 📈 **Performance**: Improved performance analysis
 
 ### v1.0.2
 

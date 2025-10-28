@@ -5,38 +5,49 @@ All notable changes to the OpenAPI Analyzer project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.5] - 2025-09-27
 
 ### Added
-- 🆕 **Repository Analysis**: Analyze entire repositories for OpenAPI files
-- 🆕 **Auto-Discovery**: Automatically finds OpenAPI files in repositories using common patterns
-- 🆕 **Repository Metadata**: Get repository information, stars, forks, and language
-- 🆕 **Multiple File Support**: Analyze multiple OpenAPI files in a single run
-- 🆕 **Enhanced CLI**: Support for repository analysis via command line interface
-- 🆕 **GitHub Token Support**: Support for private repositories and higher rate limits
-- 🆕 **Output Formats**: JSON and summary output formats for different use cases
-- 🆕 **Rate Limit Management**: Built-in GitHub API rate limit handling and status
-- 🆕 **Comprehensive Testing**: Offline and online testing suites
-- 🆕 **Example Workflows**: Multiple workflow examples for different scenarios
-- 🆕 **Enhanced Documentation**: Repository analysis documentation and examples
+- 🚀 Enhanced OpenAPI specification analysis
+- 🛡️ Improved security checks and OWASP API Security Top 10 implementation
+- 📚 Better documentation quality assessment
+- ✅ Comprehensive best practice validation
+- 🔧 Updated Docker image with latest improvements
+
+## [1.0.4] - 2025-XX-XX
 
 ### Changed
-- Enhanced action.yml with repository analysis inputs and outputs
-- Updated analyzer.py with repository analysis functionality
-- Improved README with repository analysis features and examples
-- Updated CLI interface to support both single files and repositories
-- Enhanced GitHub Actions outputs with repository metadata
+- 🔧 Various stability improvements
+- 📊 Enhanced complexity and maintainability scoring
 
-### Technical Details
-- Added GitHub API integration for repository information
-- Implemented OpenAPI file discovery using GitHub search API
-- Added support for multiple OpenAPI file formats (JSON/YAML)
-- Enhanced error handling for repository analysis
-- Added rate limit management and status checking
-- Improved CLI interface with argument parsing
-- Added comprehensive testing and example files
+## [1.0.3] - 2025-XX-XX
 
-## [1.0.0] - 2025-10-XX
+### Added
+- 🛡️ Enhanced OWASP API Security Top 10 checks
+- 📈 Improved performance analysis
+
+## [1.0.2] - 2025-XX-XX
+
+### Fixed
+- 🔧 Docker container to work correctly with GitHub Actions working directory
+- 🔧 Path resolution for local OpenAPI files
+- 🔧 Container stability across different environments
+
+### Added
+- 📚 Comprehensive feature documentation and accurate output descriptions
+- 🛡️ Enhanced OWASP API Security Top 10 implementation with all 10 checks
+- 📊 Comprehensive analysis categories and improved scoring algorithms
+
+## [1.0.1] - 2025-XX-XX
+
+### Added
+- 🆕 Repository Analysis: Analyze entire repositories for OpenAPI files
+- 🆕 Auto-Discovery: Automatically finds OpenAPI files in repositories
+- 🆕 Output Formats: JSON and summary output formats
+- 🆕 Compliance Checks: Added GDPR, HIPAA, and PCI-DSS compliance analysis
+- 🆕 Advanced Analytics: Implemented complexity and maintainability scoring
+
+## [1.0.0] - 2025-XX-XX
 
 ### Added
 - Initial release of OpenAPI Analyzer
