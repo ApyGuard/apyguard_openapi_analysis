@@ -23,24 +23,6 @@ A comprehensive GitHub Action that analyzes OpenAPI specifications and provides 
 ## Features
 
 ### 🔍 **Core Analysis**
-- **Comprehensive Validation**: Validates OpenAPI specs against best practices
-- **Detailed Reporting**: Provides actionable suggestions for improvement
-- **Version-Aware**: Supports OpenAPI 3.x and Swagger 2.0 (v2) specs
-- **Easy Integration**: Simple one-step setup in your GitHub workflows
-
-### 🛡️ **Advanced Security Analysis**
-- **OWASP API Security Top 10**: Complete compliance checking
-- **Authentication Analysis**: OAuth2, API keys, JWT token validation
-- **Authorization Checks**: Function-level and object-level authorization
-- **Data Exposure Analysis**: Identifies sensitive data exposure risks
-- **Injection Vulnerability Detection**: SQL injection and XSS pattern detection
-- **Security Misconfiguration**: HTTPS, CORS, and security header analysis
-
-### ⚡ **Performance & Optimization**
-- **Response Complexity Analysis**: Identifies overly complex response schemas
-## Features
-
-### 🔍 **Core Analysis**
 - **Comprehensive Validation**: Validates OpenAPI specs against general best practices and checks for schema validity.
 - **Detailed Reporting**: Provides actionable suggestions for improvement grouped by category (e.g., Security, Performance).
 - **Version-Aware**: Supports OpenAPI 3.x and Swagger 2.0 (v2) specifications. (v2 specs are automatically normalized to a v3-like structure for consistent analysis).
