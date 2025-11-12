@@ -131,7 +131,7 @@ def analyze_repository_openapi(owner: str, repo: str, token: Optional[str] = Non
             response = requests.get(file_info["download_url"], timeout=30)
             response.raise_for_status()
             
-            spec, parse_suggestions = _load_openapi_from_bytes(response.content)
+            spec, parse_suggestions = _load_openapi_from_bytes(response.content, file_path=file_info.get("path"))
             
             if spec:
                 result = analyze_openapi_spec(spec)
@@ -168,19 +168,63 @@ def analyze_repository_openapi(owner: str, repo: str, token: Optional[str] = Non
 
 # --- Helpers ---
 
-def _load_openapi_from_bytes(data: bytes) -> Tuple[Optional[dict], List[str]]:
+def _load_openapi_from_bytes(data: bytes, file_path: Optional[str] = None) -> Tuple[Optional[dict], List[str]]:
+    """Load OpenAPI spec from bytes, supporting both JSON and YAML formats.
+    
+    Args:
+        data: The file content as bytes
+        file_path: Optional file path to help determine format from extension
+    
+    Returns:
+        Tuple of (parsed_spec_dict, suggestions_list)
+    """
     suggestions: List[str] = []
     text = data.decode("utf-8", errors="replace").strip()
 
+    # Determine format preference based on file extension if provided
+    prefer_yaml = False
+    if file_path:
+        file_lower = file_path.lower()
+        if file_lower.endswith(('.yaml', '.yml')):
+            prefer_yaml = True
+        elif file_lower.endswith('.json'):
+            prefer_yaml = False
+        else:
+            # Content-based detection: check if it looks like YAML
+            # YAML files often start with --- or contain YAML-specific syntax
+            if text.startswith('---') or (not text.startswith('{') and not text.startswith('[')):
+                prefer_yaml = True
+    else:
+        # Content-based detection when no file path provided
+        if text.startswith('---') or (not text.startswith('{') and not text.startswith('[')):
+            prefer_yaml = True
+
     loaded: Optional[dict] = None
-    try:
-        loaded = json.loads(text)
-    except json.JSONDecodeError:
+    
+    # Try parsing based on detected/preferred format
+    if prefer_yaml:
         try:
             loaded = yaml.safe_load(text)
+            if loaded is None:
+                # Empty YAML file or only comments
+                suggestions.append("YAML file appears to be empty or contains only comments.")
         except yaml.YAMLError as e:
-            suggestions.append(f"Failed to parse as JSON or YAML: {e}")
-            loaded = None
+            # If YAML fails, try JSON as fallback
+            try:
+                loaded = json.loads(text)
+            except json.JSONDecodeError:
+                suggestions.append(f"Failed to parse as YAML: {e}")
+                loaded = None
+    else:
+        try:
+            loaded = json.loads(text)
+        except json.JSONDecodeError:
+            # If JSON fails, try YAML as fallback
+            try:
+                loaded = yaml.safe_load(text)
+            except yaml.YAMLError as e:
+                suggestions.append(f"Failed to parse as JSON or YAML: {e}")
+                loaded = None
 
     if not isinstance(loaded, dict):
         suggestions.append("OpenAPI content is not a valid JSON/YAML object.")
@@ -1821,7 +1865,10 @@ def analyze_openapi_url(url: str) -> Dict[str, Any]:
     try:
         resp = requests.get(url, timeout=30, allow_redirects=True)
         resp.raise_for_status()
-        spec, parse_suggestions = _load_openapi_from_bytes(resp.content)
+        # Extract filename from URL if possible to help with format detection
+        url_path = urlparse(url).path
+        file_path_from_url = url_path.split('/')[-1] if url_path else None
+        spec, parse_suggestions = _load_openapi_from_bytes(resp.content, file_path=file_path_from_url)
         suggestions.extend(parse_suggestions)
     except requests.RequestException as e:
         return {"status": "error", "errors": [f"Failed to fetch URL: {e}"], "is_valid": False}
@@ -2191,7 +2238,7 @@ def analyze_local_file(file_path: str) -> Dict[str, Any]:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        spec, parse_suggestions = _load_openapi_from_bytes(content.encode('utf-8'))
+        spec, parse_suggestions = _load_openapi_from_bytes(content.encode('utf-8'), file_path=file_path)
         
         if spec:
             result = analyze_openapi_spec(spec)
