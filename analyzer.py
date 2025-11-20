@@ -462,12 +462,15 @@ def analyze_security_enhanced(spec: dict) -> List[str]:
     
     # API2:2019 - Broken User Authentication
     suggestions.extend(_check_broken_authentication(security_schemes, global_security))
+    suggestions.extend(_check_sensitive_endpoints_without_auth(spec))
     
     # API3:2019 - Excessive Data Exposure
     suggestions.extend(_check_excessive_data_exposure(spec))
+    suggestions.extend(_check_hardcoded_secrets(spec))
     
     # API4:2019 - Lack of Resources & Rate Limiting
     suggestions.extend(_check_rate_limiting(spec))
+    suggestions.extend(_check_unvalidated_input_parameters(spec))
     
     # API5:2019 - Broken Function Level Authorization
     suggestions.extend(_check_function_level_authorization(spec))
@@ -551,6 +554,68 @@ def _check_broken_authentication(security_schemes: dict, global_security: list) 
     
     return suggestions
 
+def _check_sensitive_endpoints_without_auth(spec: dict) -> List[str]:
+    """Flag sensitive or destructive endpoints that lack authentication."""
+    suggestions = []
+    global_security = spec.get("security", [])
+    paths = spec.get("paths", {})
+    
+    sensitive_keywords = ["user", "account", "profile", "admin", "login", "token", "password", "deleteall", "reset"]
+    destructive_methods = {"delete"}
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            method_lower = method.lower()
+            if method_lower not in ["get", "post", "put", "delete", "patch", "options", "head", "trace"]:
+                continue
+            
+            op_security = details.get("security")
+            has_security = bool(global_security) if op_security is None else bool(op_security)
+            if has_security:
+                continue
+            
+            path_text = path.lower()
+            description_text = f"{details.get('summary', '')} {details.get('description', '')}".lower()
+            is_sensitive_route = any(keyword in path_text for keyword in sensitive_keywords) or any(
+                keyword in description_text for keyword in sensitive_keywords
+            )
+            
+            responses = details.get("responses", {})
+            exposes_sensitive_data = False
+            for response in responses.values():
+                if not isinstance(response, dict):
+                    continue
+                content = response.get("content", {})
+                for content_spec in content.values():
+                    if not isinstance(content_spec, dict):
+                        continue
+                    schema = content_spec.get("schema")
+                    if schema and isinstance(schema, dict):
+                        if _find_sensitive_fields(schema):
+                            exposes_sensitive_data = True
+                            break
+                if exposes_sensitive_data:
+                    break
+            
+            is_destructive = method_lower in destructive_methods or "delete all" in description_text
+            
+            if is_sensitive_route or exposes_sensitive_data or is_destructive:
+                reason_parts = []
+                if is_sensitive_route:
+                    reason_parts.append("is a sensitive endpoint")
+                if exposes_sensitive_data:
+                    reason_parts.append("returns sensitive data")
+                if is_destructive:
+                    reason_parts.append("performs destructive operations")
+                reason_text = " and ".join(reason_parts) if reason_parts else "is sensitive"
+                suggestions.append(f"{method.upper()} {path} {reason_text} but has no security requirements defined.")
+    
+    return suggestions
+
 def _check_excessive_data_exposure(spec: dict) -> List[str]:
     """Check for excessive data exposure in responses."""
     suggestions = []
@@ -614,6 +679,12 @@ def _check_rate_limiting(spec: dict) -> List[str]:
     suggestions = []
     paths = spec.get("paths", {})
     
+    rate_limit_extension = spec.get("x-rate-limit")
+    if isinstance(rate_limit_extension, str) and rate_limit_extension.lower() in ["none", "unlimited", "disabled"]:
+        suggestions.append("Global x-rate-limit extension indicates rate limiting is disabled. Implement rate limiting to prevent abuse.")
+    elif isinstance(rate_limit_extension, (int, float)) and rate_limit_extension <= 0:
+        suggestions.append("Global x-rate-limit value is non-positive, effectively disabling rate limiting. Configure a realistic limit.")
+    
     has_rate_limiting = False
     
     for path, methods in paths.items():
@@ -637,6 +708,118 @@ def _check_rate_limiting(spec: dict) -> List[str]:
     
     if not has_rate_limiting:
         suggestions.append("No rate limiting headers found. Implement rate limiting to prevent abuse and ensure fair usage.")
+    
+    return suggestions
+
+def _check_hardcoded_secrets(spec: dict) -> List[str]:
+    """Detect hardcoded tokens or secrets in examples."""
+    suggestions = []
+    sensitive_keywords = ["token", "secret", "password", "apikey", "api_key", "credential"]
+    suspicious_markers = ["hardcoded", "changeme", "static", "dummy", "sample"]
+    
+    def example_is_suspicious(value: str, context: str) -> bool:
+        lowered_value = value.lower()
+        if not any(marker in lowered_value for marker in suspicious_markers):
+            return False
+        lowered_context = context.lower()
+        return any(keyword in lowered_context for keyword in sensitive_keywords)
+    
+    def scan_schema(schema: dict, context: str):
+        if not isinstance(schema, dict):
+            return
+        example = schema.get("example")
+        if isinstance(example, str) and example_is_suspicious(example, context):
+            suggestions.append(f"{context} uses a hardcoded example value '{example}'. Replace with a placeholder to avoid leaking secrets.")
+        default = schema.get("default")
+        if isinstance(default, str) and example_is_suspicious(default, context):
+            suggestions.append(f"{context} uses a hardcoded default value '{default}'. Avoid embedding secrets in specifications.")
+        
+        examples = schema.get("examples", {})
+        if isinstance(examples, dict):
+            for ex_name, ex_value in examples.items():
+                if isinstance(ex_value, dict):
+                    value = ex_value.get("value")
+                    if isinstance(value, str) and example_is_suspicious(value, context):
+                        suggestions.append(f"{context} example '{ex_name}' contains a hardcoded secret-like value '{value}'.")
+        
+        properties = schema.get("properties", {})
+        if isinstance(properties, dict):
+            for prop_name, prop_schema in properties.items():
+                scan_schema(prop_schema, f"{context}.{prop_name}")
+        
+        items = schema.get("items")
+        if items:
+            scan_schema(items, f"{context}.items")
+    
+    paths = spec.get("paths", {})
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            request_body = details.get("requestBody", {})
+            if isinstance(request_body, dict):
+                content = request_body.get("content", {})
+                for ctype, content_spec in content.items():
+                    if not isinstance(content_spec, dict):
+                        continue
+                    schema = content_spec.get("schema")
+                    if schema:
+                        scan_schema(schema, f"{method.upper()} {path} requestBody {ctype}")
+            responses = details.get("responses", {})
+            for code, response in responses.items():
+                if not isinstance(response, dict):
+                    continue
+                content = response.get("content", {})
+                for ctype, content_spec in content.items():
+                    if not isinstance(content_spec, dict):
+                        continue
+                    schema = content_spec.get("schema")
+                    if schema:
+                        scan_schema(schema, f"{method.upper()} {path} response {code} {ctype}")
+    
+    return suggestions
+
+def _check_unvalidated_input_parameters(spec: dict) -> List[str]:
+    """Detect parameters that allow unvalidated or weakly validated input."""
+    suggestions = []
+    paths = spec.get("paths", {})
+    wildcard_patterns = {".*", "^.*$", "^.+$", ".+"}
+    
+    for path, methods in paths.items():
+        if not isinstance(methods, dict):
+            continue
+        for method, details in methods.items():
+            if not isinstance(details, dict):
+                continue
+            parameters = details.get("parameters", [])
+            if not isinstance(parameters, list):
+                continue
+            for param in parameters:
+                if not isinstance(param, dict):
+                    continue
+                schema = param.get("schema") or {}
+                if not isinstance(schema, dict):
+                    schema = {}
+                param_name = param.get("name", "unnamed")
+                param_in = param.get("in", "unknown")
+                param_type = schema.get("type")
+                pattern = schema.get("pattern")
+                
+                if isinstance(pattern, str) and pattern.strip() in wildcard_patterns:
+                    suggestions.append(f"Parameter '{param_name}' in {param_in} for {method.upper()} {path} uses overly permissive pattern '{pattern}'. Provide a stricter pattern or validation rules.")
+                
+                if param_name.lower().endswith("id"):
+                    if param_type and param_type != "integer":
+                        suggestions.append(f"Parameter '{param_name}' in {param_in} for {method.upper()} {path} should be an integer but is defined as {param_type}.")
+                    elif not param_type:
+                        suggestions.append(f"Parameter '{param_name}' in {param_in} for {method.upper()} {path} is missing a type declaration.")
+                
+                if param_in == "path" and param_type == "string":
+                    has_constraints = any(schema.get(key) is not None for key in ["pattern", "format", "minLength", "maxLength", "enum"])
+                    if not has_constraints:
+                        suggestions.append(f"Path parameter '{param_name}' in {method.upper()} {path} is a free-form string without validation constraints. Add pattern, format, or length restrictions.")
     
     return suggestions
 
